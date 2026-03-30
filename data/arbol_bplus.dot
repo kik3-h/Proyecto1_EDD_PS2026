@@ -1,0 +1,20 @@
+digraph ArbolBPlus {
+    node [shape=record, style=filled];
+    rankdir=TB;
+    nodo0 [label="<f0> Carnes", fillcolor=lightyellow];
+    nodo0 -> nodo1;
+    nodo1 [label="<f0> Abarrotes|<f1> Bebidas", fillcolor=lightgreen];
+    nodo0 -> nodo2;
+    nodo2 [label="<f0> Carnes|<f1> Dulces|<f2> Enlatados|<f3> Frutas|<f4> Granos", fillcolor=lightgreen];
+
+    // Subgrafo para alinear hojas horizontalmente
+    { rank=same; nodo1; nodo2; }
+
+    // Enlaces entre hojas (ordenamiento)
+    edge [style=invis, weight=10];
+    nodo1 -> nodo2;
+
+    // Enlaces visibles entre hojas
+    edge [style=dashed, color=blue, constraint=false, weight=0];
+    nodo1:e -> nodo2:w [label="sig"];
+}

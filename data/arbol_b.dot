@@ -1,0 +1,9 @@
+digraph ArbolB {
+    node [shape=record, style=filled, fillcolor=lightyellow];
+    rankdir=TB;
+    nodo0 [label="<f0> 2026-06-15"];
+    nodo0 -> nodo1;
+    nodo1 [label="<f0> 2026-04-10|<f1> 2026-05-20"];
+    nodo0 -> nodo2;
+    nodo2 [label="<f0> 2026-08-20|<f1> 2026-12-01|<f2> 2027-01-15"];
+}

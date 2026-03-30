@@ -1,0 +1,13 @@
+digraph ArbolAVL {
+    node [shape=record, style=filled, fillcolor=lightblue];
+    rankdir=TB;
+    nodo0 [label="Cereal Integral\nAltura: 3"];
+    nodo0 -> nodo1 [label="izq"];
+    nodo1 [label="Arroz Blanco\nAltura: 1"];
+    nodo0 -> nodo2 [label="der"];
+    nodo2 [label="Pan Integral\nAltura: 2"];
+    nodo2 -> nodo3 [label="izq"];
+    nodo3 [label="Manzana Roja\nAltura: 1"];
+    nodo2 -> nodo4 [label="der"];
+    nodo4 [label="Yogurt Natural\nAltura: 1"];
+}
