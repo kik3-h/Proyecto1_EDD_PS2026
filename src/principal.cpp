@@ -8,6 +8,7 @@
 #include "CargadorCSV.h"
 #include "ListaEnlazada.h"
 #include "ListaEnlazadaOrdenada.h"
+#include "MedidorRendimiento.h"
 #include "Producto.h"
 #include "TablaHash.h"
 
@@ -35,7 +36,8 @@ int main() {
         std::cout << "9. Generar imagen del Arbol B (Graphviz)\n";
         std::cout << "10. Buscar productos por Categoria (Arbol B+)\n";
         std::cout << "11. Generar imagen del Arbol B+ (Graphviz)\n";
-        std::cout << "12. Salir\n";
+        std::cout << "12. Ejecutar pruebas de rendimiento (Benchmarking)\n";
+        std::cout << "13. Salir\n";
         std::cout << "Seleccione una opcion: ";
 
         int opcion = 0;
@@ -165,6 +167,15 @@ int main() {
                 std::cout << '\n';
                 break;
             case 12:
+                {
+                    MedidorRendimiento medidor;
+                    medidor.ejecutarPruebasBusqueda(listaProductosNormal,
+                                                    listaProductosOrdenada,
+                                                    arbolProductos,
+                                                    tablaProductos);
+                }
+                break;
+            case 13:
                 continuar = false;
                 break;
             default:

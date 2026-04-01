@@ -26,6 +26,17 @@ void ListaEnlazada::insertar(Producto* producto) {
     cabeza = nuevoNodo;
 }
 
+Producto* ListaEnlazada::buscarPorNombre(const std::string& nombre) const {
+    Nodo* actual = cabeza;
+    while (actual != nullptr) {
+        if (actual->producto != nullptr && actual->producto->nombre == nombre) {
+            return actual->producto;
+        }
+        actual = actual->siguiente;
+    }
+    return nullptr;
+}
+
 Producto* ListaEnlazada::buscarPorCodigoBarras(const std::string& codigo) const {
     Nodo* actual = cabeza;
     while (actual != nullptr) {
@@ -58,6 +69,24 @@ bool ListaEnlazada::eliminarPorCodigoBarras(const std::string& codigo) {
     }
 
     return false;
+}
+
+int ListaEnlazada::obtenerPrimerosProductos(Producto** productos, int cantidadMaxima) const {
+    if (productos == nullptr || cantidadMaxima <= 0) {
+        return 0;
+    }
+
+    int cantidad = 0;
+    Nodo* actual = cabeza;
+    while (actual != nullptr && cantidad < cantidadMaxima) {
+        if (actual->producto != nullptr) {
+            productos[cantidad] = actual->producto;
+            ++cantidad;
+        }
+        actual = actual->siguiente;
+    }
+
+    return cantidad;
 }
 
 void ListaEnlazada::mostrarTodos() const {

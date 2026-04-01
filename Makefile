@@ -17,5 +17,9 @@ $(EJECUTABLE): $(ARCHIVOS_OBJ)
 $(RUTA_FUENTES)/%.o: $(RUTA_FUENTES)/%.cpp
 	$(CXX) $(FLAGS_COMPILACION) -I$(RUTA_CABECERAS) -c $< -o $@
 
+run: $(EJECUTABLE)
+	@echo "Ejecutando el proyecto uno de kike, llamado: $(EJECUTABLE)..."
+	./$(EJECUTABLE)
+
 limpiar:
 	rm -f $(RUTA_FUENTES)/*.o $(EJECUTABLE)
