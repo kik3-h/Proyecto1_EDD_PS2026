@@ -9,9 +9,9 @@
 #include <QPainter>
 #include <QBrush>
 
-// =============================================================================
+
 // Constructor: Inicializa la ventana principal con referencias al backend
-// =============================================================================
+
 VentanaPrincipal::VentanaPrincipal(
     ListaEnlazada& listaNormal,
     ListaEnlazadaOrdenada& listaOrdenada,
@@ -51,16 +51,12 @@ VentanaPrincipal::VentanaPrincipal(
     conectarSenales();
 }
 
-// =============================================================================
 // Destructor
-// =============================================================================
 VentanaPrincipal::~VentanaPrincipal() {
     // Qt maneja la memoria de los widgets hijos automáticamente
 }
 
-// =============================================================================
 // Configurar la interfaz principal
-// =============================================================================
 void VentanaPrincipal::configurarInterfaz() {
     // Crear widget central
     widgetCentral = new QWidget(this);
@@ -93,9 +89,7 @@ void VentanaPrincipal::configurarInterfaz() {
     layoutPrincipal->addWidget(panelContenido, 1);
 }
 
-// =============================================================================
 // Configurar el panel lateral (Sidebar)
-// =============================================================================
 void VentanaPrincipal::configurarSidebar() {
     // Frame contenedor del sidebar
     panelSidebar = new QFrame(widgetCentral);
@@ -158,9 +152,7 @@ void VentanaPrincipal::configurarSidebar() {
     layoutSidebar->addWidget(lblVersion);
 }
 
-// =============================================================================
 // Configurar la barra de búsqueda avanzada
-// =============================================================================
 void VentanaPrincipal::configurarBarraBusqueda() {
     // Contenedor de la barra de búsqueda
     barraBusqueda = new QWidget(panelContenido);
@@ -218,9 +210,7 @@ void VentanaPrincipal::configurarBarraBusqueda() {
     layoutBarraBusqueda->addStretch();
 }
 
-// =============================================================================
 // Configurar la tabla de productos
-// =============================================================================
 void VentanaPrincipal::configurarTabla() {
     tablaProductos = new QTableWidget(widgetCentral);
     tablaProductos->setObjectName("tablaProductos");
@@ -252,9 +242,8 @@ void VentanaPrincipal::configurarTabla() {
     tablaProductos->setColumnWidth(5, 120);  // Caducidad
 }
 
-// =============================================================================
-// Aplicar estilos QSS (Tema FC Barcelona: Blaugrana)
-// =============================================================================
+// Aplicar estilos QSS (Tema FC Barcelona: Blaugrana kjaksajs)
+
 void VentanaPrincipal::aplicarEstilos() {
     QString estilos = R"(
         /* ===== VENTANA PRINCIPAL ===== */
@@ -527,9 +516,7 @@ void VentanaPrincipal::aplicarEstilos() {
     setStyleSheet(estilos);
 }
 
-// =============================================================================
 // Conectar señales y slots
-// =============================================================================
 void VentanaPrincipal::conectarSenales() {
     // Botones del sidebar
     connect(btnCargarCSV, &QPushButton::clicked, this, &VentanaPrincipal::onCargarCSV);
@@ -550,10 +537,8 @@ void VentanaPrincipal::conectarSenales() {
     connect(inputBusquedaFin, &QLineEdit::returnPressed, this, &VentanaPrincipal::ejecutarBusquedaAvanzada);
 }
 
-// =============================================================================
 // SLOT: Cargar archivo CSV
 // Usa QFileDialog para seleccionar archivo y carga los datos en las estructuras
-// =============================================================================
 void VentanaPrincipal::onCargarCSV() {
     QString archivo = QFileDialog::getOpenFileName(
         this,
@@ -593,10 +578,8 @@ void VentanaPrincipal::onCargarCSV() {
     );
 }
 
-// =============================================================================
 // SLOT: Actualizar tabla de productos
 // Obtiene todos los productos de la lista y los muestra en el QTableWidget
-// =============================================================================
 void VentanaPrincipal::actualizarTabla() {
     // Deshabilitar ordenamiento temporalmente para evitar problemas
     tablaProductos->setSortingEnabled(false);
@@ -648,10 +631,8 @@ void VentanaPrincipal::actualizarTabla() {
     tablaProductos->setSortingEnabled(true);
 }
 
-// =============================================================================
 // SLOT: Insertar nuevo producto
 // Usa un QDialog con QFormLayout para mejor experiencia de usuario
-// =============================================================================
 void VentanaPrincipal::onInsertarProducto() {
     // Crear diálogo de inserción
     QDialog dialogo(this);
@@ -792,10 +773,8 @@ void VentanaPrincipal::onInsertarProducto() {
         QString("Producto '%1' insertado correctamente.").arg(nombre));
 }
 
-// =============================================================================
 // SLOT: Eliminar producto
 // Solicita código de barras y elimina el producto de todas las estructuras
-// =============================================================================
 void VentanaPrincipal::onEliminarProducto() {
     bool ok;
     QString codigo = QInputDialog::getText(this, "Eliminar Producto",
@@ -846,10 +825,8 @@ void VentanaPrincipal::onEliminarProducto() {
         "Producto eliminado correctamente.");
 }
 
-// =============================================================================
 // SLOT: Buscar producto por código de barras
 // Usa QInputDialog para pedir el código y busca en la TablaHash
-// =============================================================================
 void VentanaPrincipal::onBuscarProducto() {
     bool ok;
     QString codigo = QInputDialog::getText(
@@ -902,10 +879,8 @@ void VentanaPrincipal::onBuscarProducto() {
     QMessageBox::information(this, "Producto Encontrado", info);
 }
 
-// =============================================================================
 // SLOT: Generar reportes Graphviz
 // Llama a generarImagen() de AVL, B y B+
-// =============================================================================
 void VentanaPrincipal::onGenerarReportes() {
     if (refListaNormal.estaVacia()) {
         QMessageBox::warning(this, "Sin Datos",
@@ -1014,10 +989,8 @@ void VentanaPrincipal::onGenerarReportes() {
     delete visor;
 }
 
-// =============================================================================
 // SLOT: Ejecutar pruebas de rendimiento (Benchmarking)
 // Muestra resultados en QDialog con QTextEdit monoespaciado
-// =============================================================================
 void VentanaPrincipal::onBenchmarking() {
     if (refListaNormal.estaVacia()) {
         QMessageBox::warning(this, "Sin Datos",
@@ -1080,10 +1053,9 @@ void VentanaPrincipal::onBenchmarking() {
     delete dialogo;
 }
 
-// =============================================================================
 // SLOT: Cambio de filtro de búsqueda
 // Muestra/oculta el input de fecha fin según selección
-// =============================================================================
+
 void VentanaPrincipal::onCambioFiltroBusqueda(int indice) {
     // Índice 2 = "Rango de Fecha (B)" (ahora sin Hash)
     bool esRango = (indice == 2);
@@ -1105,9 +1077,8 @@ void VentanaPrincipal::onCambioFiltroBusqueda(int indice) {
     inputBusquedaFin->clear();
 }
 
-// =============================================================================
 // SLOT: Ejecutar búsqueda avanzada según filtro seleccionado
-// =============================================================================
+
 void VentanaPrincipal::ejecutarBusquedaAvanzada() {
     QString termino = inputBusqueda->text().trimmed();
     
@@ -1157,9 +1128,8 @@ void VentanaPrincipal::ejecutarBusquedaAvanzada() {
     }
 }
 
-// =============================================================================
 // Mostrar un conjunto de productos en la tabla
-// =============================================================================
+
 void VentanaPrincipal::mostrarProductosEnTabla(const std::vector<Producto*>& productos) {
     tablaProductos->setSortingEnabled(false);
     tablaProductos->setRowCount(0);

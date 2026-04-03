@@ -1,14 +1,15 @@
 #include "CargadorCSV.h"
 
 #include <iostream>
-#include <sstream>
+#include <sstream> //esta libreria se encarga de manejar strings y flujos de datos
 
 #include "Producto.h"
+//esta clase realiza la carga de datos desde un archivo CSV
 
 void CargadorCSV::cargar(std::string rutaArchivo,
                          ListaEnlazada& listaNormal,
                          ListaEnlazadaOrdenada& listaOrdenada,
-                         TablaHash& tabla,
+                         TablaHash& tabla, //esto en teoria pero no jalo xd 
                          ArbolAVL& arbolAVL,
                          ArbolB& arbolB,
                          ArbolBPlus& arbolBPlus) {

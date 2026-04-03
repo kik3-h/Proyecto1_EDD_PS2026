@@ -1,7 +1,7 @@
 #include "TablaHash.h"
 
 NodoHash::NodoHash(Producto* producto) : producto(producto), siguiente(nullptr) {}
-
+//en teoria funcionaria pero no lose pq ya no continue con su desarrollo jsjs
 TablaHash::TablaHash(int capacidadInicial)
     : tabla(nullptr), capacidad(capacidadInicial > 0 ? capacidadInicial : 1009) {
     tabla = new NodoHash*[capacidad];

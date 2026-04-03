@@ -1,6 +1,6 @@
 #ifndef VENTANA_PRINCIPAL_H
 #define VENTANA_PRINCIPAL_H
-
+//todas las librerias necesarias para lo grafico
 #include <QMainWindow>
 #include <QWidget>
 #include <QHBoxLayout>
@@ -39,10 +39,8 @@
 #include "CargadorCSV.h"
 #include "MedidorRendimiento.h"
 
-// =============================================================================
-// VentanaPrincipal: Ventana principal de la aplicación con tema FC Barcelona
+// VentanaPrincipal: Ventana principal de la aplicación con tema FC Barcelona en teoria jaksjas
 // Hereda de QMainWindow para proporcionar menús, barras de herramientas, etc.
-// =============================================================================
 class VentanaPrincipal : public QMainWindow {
     Q_OBJECT
 
@@ -60,9 +58,7 @@ public:
     ~VentanaPrincipal();
 
 private slots:
-    // =========================================================================
     // Slots para manejar eventos de botones
-    // =========================================================================
     void onCargarCSV();
     void onInsertarProducto();
     void onEliminarProducto();
@@ -76,9 +72,7 @@ private slots:
     void onCambioFiltroBusqueda(int indice);
 
 private:
-    // =========================================================================
     // Widgets de la interfaz
-    // =========================================================================
     
     // Widget central y layout principal
     QWidget* widgetCentral;
@@ -114,9 +108,7 @@ private:
     // Tabla de productos
     QTableWidget* tablaProductos;
 
-    // =========================================================================
     // Referencias a estructuras de datos del backend
-    // =========================================================================
     ListaEnlazada& refListaNormal;
     ListaEnlazadaOrdenada& refListaOrdenada;
     TablaHash& refTablaHash;
@@ -127,9 +119,7 @@ private:
     // Cargador de CSV (propio de la ventana)
     CargadorCSV cargadorCSV;
 
-    // =========================================================================
     // Métodos de inicialización
-    // =========================================================================
     void configurarInterfaz();
     void configurarSidebar();
     void configurarBarraBusqueda();

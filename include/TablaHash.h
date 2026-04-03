@@ -4,7 +4,8 @@
 #include <string>
 
 #include "Producto.h"
-
+//intente implementar esto pero me dijeron que no se pedia entonces lo deje
+//y no lo borre pq si funciona algo no lo toques jajaja
 class NodoHash {
 public:
     Producto* producto;

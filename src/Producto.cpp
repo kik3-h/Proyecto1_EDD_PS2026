@@ -1,5 +1,5 @@
 #include "Producto.h"
-
+//esta clase hace representacion de un producto en el catálogo 
 Producto::Producto(const std::string& nombre,
                    const std::string& codigoBarras,
                    const std::string& categoria,

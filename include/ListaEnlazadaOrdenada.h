@@ -4,7 +4,7 @@
 #include <string>
 
 #include "Producto.h"
-
+//esta clase realiza la gestión de una lista enlazada ordenada de productos
 class NodoOrdenado {
 public:
     Producto* producto;

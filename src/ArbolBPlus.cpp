@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 
-// ==================== ClaveCategoria ====================
+// ClaveCategoria
 
 ClaveCategoria::ClaveCategoria() : categoria(""), productos(nullptr) {}
 
@@ -15,7 +15,7 @@ ClaveCategoria::~ClaveCategoria() {
     }
 }
 
-// ==================== NodoBPlus ====================
+// NodoBPlus
 
 NodoBPlus::NodoBPlus(int t, bool hoja)
     : claves(nullptr), hijos(nullptr), numClaves(0), esHoja(hoja),
@@ -40,7 +40,7 @@ NodoBPlus::~NodoBPlus() {
     hijos = nullptr;
 }
 
-// ==================== ArbolBPlus ====================
+// ArbolBPlus 
 
 ArbolBPlus::ArbolBPlus(int t) : raiz(nullptr), gradoMinimo(t) {}
 
@@ -112,7 +112,7 @@ ClaveCategoria* ArbolBPlus::buscarClaveEnHoja(NodoBPlus* hoja, const std::string
     return nullptr;
 }
 
-// CORRECCIÓN BUG #2: Búsqueda global en TODAS las hojas para evitar duplicados
+// Búsqueda global en TODAS las hojas para evitar duplicados
 // Esto es necesario porque buscarHoja() puede dirigirnos a una hoja incorrecta
 // cuando las claves han sido redistribuidas por splits
 ClaveCategoria* ArbolBPlus::buscarClaveGlobal(const std::string& categoria) const {
@@ -147,7 +147,7 @@ void ArbolBPlus::insertar(Producto* producto) {
         return;
     }
 
-    // CORRECCIÓN BUG #2: Búsqueda global para evitar duplicados de categoría
+    // Búsqueda global para evitar duplicados de categoría
     // Primero verificamos si la categoría ya existe en CUALQUIER hoja
     ClaveCategoria* claveExistente = buscarClaveGlobal(categoria);
 
@@ -241,7 +241,7 @@ void ArbolBPlus::dividirHijo(NodoBPlus* padre, int indice, NodoBPlus* hijo) {
         nuevoNodo->numClaves = t;
         hijo->numClaves = t - 1;
 
-        // CORRECCIÓN BUG #1: Actualizar enlace secuencial entre hojas
+        // Búsqueda global para evitar duplicados de categoría
         // Esto mantiene la lista enlazada de hojas para recorrido O(log N + K)
         nuevoNodo->siguiente = hijo->siguiente;
         hijo->siguiente = nuevoNodo;
@@ -324,9 +324,8 @@ void ArbolBPlus::buscarPorCategoria(const std::string& categoria) const {
     }
 }
 
-// =============================================================================
 // Retorna productos de una categoría en un vector (para uso en GUI)
-// =============================================================================
+
 std::vector<Producto*> ArbolBPlus::obtenerPorCategoria(const std::string& categoria) const {
     std::vector<Producto*> resultado;
     
@@ -396,8 +395,7 @@ void ArbolBPlus::generarDotRecursivo(NodoBPlus* nodo, std::ofstream& archivo, in
         }
     }
 }
-
-// CORRECCIÓN BUG #1: Generación de enlaces visuales entre hojas
+// Generación de enlaces visuales entre hojas
 // Esta función genera las flechas punteadas azules que conectan las hojas secuencialmente,
 // demostrando el recorrido O(log N + K) requerido por el enunciado.
 // Solución: Se usan edges con estilos individuales y puertos específicos (:sig y :f0)

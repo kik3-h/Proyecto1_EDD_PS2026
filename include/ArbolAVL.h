@@ -6,6 +6,8 @@
 
 #include "Producto.h"
 
+
+//esta clase representa un nodo del arbol AVL, cada nodo contiene un producto y punteros a los nodos izquierdo y derecho, ademas de la altura del nodo para mantener el equilibrio del arbol
 class NodoAVL {
 public:
     Producto* producto;

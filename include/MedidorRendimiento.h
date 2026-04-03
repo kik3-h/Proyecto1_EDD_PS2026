@@ -9,16 +9,12 @@
 #include "ListaEnlazadaOrdenada.h"
 #include "TablaHash.h"
 
-// ============================================================================
 // MedidorRendimiento: Clase para ejecutar pruebas de benchmarking
-// según el enunciado del proyecto.
-//
-// Metodología de medición (según PDF):
+// Metodología de medición 
 // - N = 20 consultas consecutivas por cada prueba
 // - M = 5 repeticiones del experimento para obtener el promedio
 // - Tiempo final = (Suma de M mediciones) / M
 // - Cada medición = tiempo de ejecutar N búsquedas consecutivas
-// ============================================================================
 class MedidorRendimiento {
 private:
     // Constantes del experimento según enunciado

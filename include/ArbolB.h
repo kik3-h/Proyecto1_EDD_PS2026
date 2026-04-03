@@ -3,7 +3,7 @@
 
 #include <fstream>
 #include <string>
-#include <vector>
+#include <vector> //esta libreria se encarga de manejar arreglos dinamicos
 
 #include "ListaEnlazada.h"
 #include "Producto.h"

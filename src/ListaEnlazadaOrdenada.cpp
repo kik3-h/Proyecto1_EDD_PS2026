@@ -1,7 +1,7 @@
 #include "ListaEnlazadaOrdenada.h"
 
 #include <iostream>
-
+//esta clase hace la gestión de una lista enlazada ordenada de productos 
 NodoOrdenado::NodoOrdenado(Producto* producto) : producto(producto), siguiente(nullptr) {}
 
 ListaEnlazadaOrdenada::ListaEnlazadaOrdenada() : cabeza(nullptr) {}

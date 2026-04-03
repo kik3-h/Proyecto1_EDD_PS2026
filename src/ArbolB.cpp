@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 
-// ==================== ClaveFecha ====================
+// ClaveFecha 
 
 ClaveFecha::ClaveFecha() : fecha(""), productos(nullptr) {}
 
@@ -14,7 +14,7 @@ ClaveFecha::~ClaveFecha() {
     }
 }
 
-// ==================== NodoB ====================
+// NodoB 
 
 NodoB::NodoB(int t, bool hoja)
     : claves(nullptr), hijos(nullptr), numClaves(0), esHoja(hoja), gradoMinimo(t) {
@@ -38,7 +38,7 @@ NodoB::~NodoB() {
     hijos = nullptr;
 }
 
-// ==================== ArbolB ====================
+//ArbolB 
 
 ArbolB::ArbolB(int t) : raiz(nullptr), gradoMinimo(t) {}
 
@@ -291,9 +291,9 @@ void ArbolB::buscarRangoRecursivo(NodoB* nodo,
     }
 }
 
-// =============================================================================
+
 // Retorna productos en rango de fechas (para GUI) - versión recursiva auxiliar
-// =============================================================================
+
 void ArbolB::obtenerRangoRecursivo(NodoB* nodo,
                                     const std::string& fechaInicio,
                                     const std::string& fechaFin,
@@ -332,9 +332,7 @@ void ArbolB::obtenerRangoRecursivo(NodoB* nodo,
     }
 }
 
-// =============================================================================
 // Retorna productos en un rango de fechas en un vector (para GUI)
-// =============================================================================
 std::vector<Producto*> ArbolB::obtenerPorRango(const std::string& fechaInicio, 
                                                 const std::string& fechaFin) const {
     std::vector<Producto*> resultado;

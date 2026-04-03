@@ -1,7 +1,5 @@
-// =============================================================================
 // principal.cpp - Punto de entrada de la aplicación Qt
 // Catálogo de Productos - Proyecto EDD 2026
-// =============================================================================
 
 #include <QApplication>
 #include "VentanaPrincipal.h"
@@ -26,9 +24,7 @@ int main(int argc, char* argv[]) {
     QApplication::setApplicationVersion("1.0.0");
     QApplication::setOrganizationName("USAC - EDD 2026");
 
-    // =========================================================================
     // Instanciar estructuras de datos del backend
-    // =========================================================================
     ListaEnlazada listaProductosNormal;
     ListaEnlazadaOrdenada listaProductosOrdenada;
     TablaHash tablaProductos;
@@ -36,9 +32,7 @@ int main(int argc, char* argv[]) {
     ArbolB arbolProductosFecha;
     ArbolBPlus arbolProductosCategoria;
 
-    // =========================================================================
     // Crear ventana principal pasando referencias a las estructuras
-    // =========================================================================
     VentanaPrincipal ventana(
         listaProductosNormal,
         listaProductosOrdenada,
@@ -53,10 +47,9 @@ int main(int argc, char* argv[]) {
     return app.exec();
 }
 
-// =============================================================================
 // CÓDIGO DEL MENÚ DE CONSOLA (COMENTADO PARA REFERENCIA)
 // Las estructuras de datos se instancian ahora dentro de VentanaPrincipal
-// =============================================================================
+//comente esto pq alfinal si me pase a qt con interfaz grafica
 /*
 #include <iostream>
 #include <limits>

@@ -5,9 +5,7 @@
 #include <sstream>
 #include <string>
 
-// ============================================================================
 // Constructor: Inicializa los arreglos de datos de prueba inexistentes
-// ============================================================================
 MedidorRendimiento::MedidorRendimiento() {
     for (int i = 0; i < N; ++i) {
         nombresInexistentes[i] = "ProductoInexistente_XYZ_" + std::to_string(9000 + i);
@@ -15,9 +13,8 @@ MedidorRendimiento::MedidorRendimiento() {
     }
 }
 
-// ============================================================================
 // Inicializar datos de prueba desde los productos realmente cargados
-// ============================================================================
+
 void MedidorRendimiento::inicializarDatosPrueba(ListaEnlazada& listaNormal) {
     Producto* muestras[N];
     for (int i = 0; i < N; ++i) {
@@ -38,10 +35,9 @@ void MedidorRendimiento::inicializarDatosPrueba(ListaEnlazada& listaNormal) {
     }
 }
 
-// ============================================================================
 // MEDICIÓN EN LISTA NORMAL - O(n)
 // Retorna tiempo total en milisegundos (double)
-// ============================================================================
+
 double MedidorRendimiento::medirBusquedaListaNormal(ListaEnlazada& lista,
                                                     const std::string nombres[],
                                                     int cantidad) const {
@@ -63,9 +59,8 @@ double MedidorRendimiento::medirBusquedaListaNormal(ListaEnlazada& lista,
     return tiempoTotalMs;
 }
 
-// ============================================================================
 // MEDICIÓN EN LISTA ORDENADA - O(n)
-// ============================================================================
+
 double MedidorRendimiento::medirBusquedaListaOrdenada(ListaEnlazadaOrdenada& lista,
                                                       const std::string nombres[],
                                                       int cantidad) const {
@@ -87,9 +82,9 @@ double MedidorRendimiento::medirBusquedaListaOrdenada(ListaEnlazadaOrdenada& lis
     return tiempoTotalMs;
 }
 
-// ============================================================================
+
 // MEDICIÓN EN ÁRBOL AVL - O(log n)
-// ============================================================================
+
 double MedidorRendimiento::medirBusquedaAVL(ArbolAVL& arbol,
                                             const std::string nombres[],
                                             int cantidad) const {
@@ -111,9 +106,7 @@ double MedidorRendimiento::medirBusquedaAVL(ArbolAVL& arbol,
     return tiempoTotalMs;
 }
 
-// ============================================================================
 // MÉTODOS DE GENERACIÓN DE STRINGS
-// ============================================================================
 
 std::string MedidorRendimiento::generarResumenMetodologia() const {
     std::ostringstream ss;
@@ -169,10 +162,10 @@ std::string MedidorRendimiento::generarFilaTabla(const std::string& estructura,
     return ss.str();
 }
 
-// ============================================================================
+
 // MÉTODO PRINCIPAL: ejecutarPruebasBusqueda
 // Retorna un string con toda la tabla ASCII (sin Tabla Hash)
-// ============================================================================
+
 std::string MedidorRendimiento::ejecutarPruebasBusqueda(ListaEnlazada& listaNormal,
                                                          ListaEnlazadaOrdenada& listaOrdenada,
                                                          ArbolAVL& arbolAVL,
@@ -195,9 +188,7 @@ std::string MedidorRendimiento::ejecutarPruebasBusqueda(ListaEnlazada& listaNorm
     // Generar metodología
     resultado << generarResumenMetodologia();
 
-    // ========================================================================
     // MEDICIONES
-    // ========================================================================
 
     // Lista Normal
     double tiempoListaNormalExitosa = medirBusquedaListaNormal(listaNormal, nombresExistentes, N);
@@ -211,9 +202,7 @@ std::string MedidorRendimiento::ejecutarPruebasBusqueda(ListaEnlazada& listaNorm
     double tiempoAVLExitosa = medirBusquedaAVL(arbolAVL, nombresExistentes, N);
     double tiempoAVLFallida = medirBusquedaAVL(arbolAVL, nombresInexistentes, N);
 
-    // ========================================================================
     // CÁLCULO DE PROMEDIOS (dividir entre M)
-    // ========================================================================
     const double divisorM = static_cast<double>(M);
 
     double promedioListaNormalExitosa = tiempoListaNormalExitosa / divisorM;
@@ -223,9 +212,9 @@ std::string MedidorRendimiento::ejecutarPruebasBusqueda(ListaEnlazada& listaNorm
     double promedioAVLExitosa = tiempoAVLExitosa / divisorM;
     double promedioAVLFallida = tiempoAVLFallida / divisorM;
 
-    // ========================================================================
+
     // GENERAR TABLA
-    // ========================================================================
+
     resultado << generarEncabezadoTabla();
 
     // Lista Normal
@@ -252,9 +241,9 @@ std::string MedidorRendimiento::ejecutarPruebasBusqueda(ListaEnlazada& listaNorm
     resultado << "  - El promedio se calcula sobre " << M << " repeticiones del experimento.\n";
     resultado << "\n";
 
-    // ========================================================================
+ 
     // ANÁLISIS COMPARATIVO
-    // ========================================================================
+  
     resultado << "+------------------------------------------------------------------------------+\n";
     resultado << "|                           ANALISIS COMPARATIVO                              |\n";
     resultado << "+------------------------------------------------------------------------------+\n";

@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+
+//esta clase realiza la gestión de una lista enlazada de productos 
 Nodo::Nodo(Producto* producto) : producto(producto), siguiente(nullptr) {}
 
 ListaEnlazada::ListaEnlazada() : cabeza(nullptr) {}
@@ -111,10 +113,9 @@ bool ListaEnlazada::estaVacia() const {
     return cabeza == nullptr;
 }
 
-// =============================================================================
 // obtenerTodos: Devuelve un vector con punteros a todos los productos
 // Nota: std::vector se usa como buffer temporal para pasar datos a la UI
-// =============================================================================
+
 std::vector<Producto*> ListaEnlazada::obtenerTodos() const {
     std::vector<Producto*> productos;
     

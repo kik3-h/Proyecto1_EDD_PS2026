@@ -12,7 +12,7 @@
 // Diseño: Una única clave por categoría, con ListaEnlazada* para agrupar duplicados
 struct ClaveCategoria {
     std::string categoria;
-    ListaEnlazada* productos;  // Solo se usa en hojas (agrupa productos de misma categoría)
+    ListaEnlazada* productos;  // Solo se usa en hojas agrupa productos de misma categoría
 
     ClaveCategoria();
     ~ClaveCategoria();

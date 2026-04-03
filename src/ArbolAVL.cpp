@@ -1,8 +1,9 @@
 #include "ArbolAVL.h"
 
-#include <cstdlib>
+#include <cstdlib> //esta libreria se encarga de manejar la asignación y liberación de memoria
 #include <iostream>
 
+//esta clase realiza la gestión de un árbol AVL 
 NodoAVL::NodoAVL(Producto* producto)
     : producto(producto), izquierdo(nullptr), derecho(nullptr), altura(1) {}
 
