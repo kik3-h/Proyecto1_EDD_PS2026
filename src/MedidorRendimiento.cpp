@@ -2,16 +2,13 @@
 
 #include <chrono>
 #include <iomanip>
-#include <iostream>
+#include <sstream>
 #include <string>
 
 // ============================================================================
 // Constructor: Inicializa los arreglos de datos de prueba inexistentes
-// Los datos existentes se llenan dinámicamente desde la lista cargada
 // ============================================================================
 MedidorRendimiento::MedidorRendimiento() {
-    // Inicializar nombres y códigos que NO existen en el catálogo
-    // Estos se usan para medir búsquedas fallidas (peor caso)
     for (int i = 0; i < N; ++i) {
         nombresInexistentes[i] = "ProductoInexistente_XYZ_" + std::to_string(9000 + i);
         codigosInexistentes[i] = "CODIGO_INVALIDO_" + std::to_string(9000 + i);
@@ -20,7 +17,6 @@ MedidorRendimiento::MedidorRendimiento() {
 
 // ============================================================================
 // Inicializar datos de prueba desde los productos realmente cargados
-// Esto garantiza que los nombres y códigos SÍ existen en las estructuras
 // ============================================================================
 void MedidorRendimiento::inicializarDatosPrueba(ListaEnlazada& listaNormal) {
     Producto* muestras[N];
@@ -30,14 +26,12 @@ void MedidorRendimiento::inicializarDatosPrueba(ListaEnlazada& listaNormal) {
 
     int cantidadObtenida = listaNormal.obtenerPrimerosProductos(muestras, N);
 
-    // Llenar arreglos con datos reales del catálogo
     for (int i = 0; i < N; ++i) {
         if (cantidadObtenida > 0) {
             Producto* producto = muestras[i % cantidadObtenida];
             nombresExistentes[i] = producto->nombre;
             codigosExistentes[i] = producto->codigoBarras;
         } else {
-            // Fallback si no hay productos
             nombresExistentes[i] = "";
             codigosExistentes[i] = "";
         }
@@ -45,50 +39,13 @@ void MedidorRendimiento::inicializarDatosPrueba(ListaEnlazada& listaNormal) {
 }
 
 // ============================================================================
-// MEDICIÓN DE BÚSQUEDA EN LISTA NORMAL (NO ORDENADA)
-// Complejidad teórica: O(n) - Búsqueda secuencial
-//
-// Algoritmo de medición:
-// 1. Repetir M veces el experimento
-// 2. En cada repetición: medir tiempo de ejecutar N búsquedas consecutivas
-// 3. Acumular el tiempo total de todas las repeticiones
-// 4. El promedio final se calcula dividiendo entre M
+// MEDICIÓN EN LISTA NORMAL - O(n)
+// Retorna tiempo total en milisegundos (double)
 // ============================================================================
-long long MedidorRendimiento::medirBusquedaListaNormal(ListaEnlazada& lista,
-                                                       const std::string nombres[],
-                                                       int cantidad) const {
-    long long tiempoTotalMicrosegundos = 0;
-
-    for (int repeticion = 0; repeticion < M; ++repeticion) {
-        // Iniciar cronómetro de alta resolución
-        auto inicio = std::chrono::high_resolution_clock::now();
-
-        // Ejecutar N búsquedas consecutivas
-        for (int i = 0; i < cantidad; ++i) {
-            // Suprimir resultado para evitar optimizaciones del compilador
-            volatile Producto* resultado = lista.buscarPorNombre(nombres[i]);
-            (void)resultado;
-        }
-
-        // Detener cronómetro y calcular duración
-        auto fin = std::chrono::high_resolution_clock::now();
-        tiempoTotalMicrosegundos +=
-            std::chrono::duration_cast<std::chrono::microseconds>(fin - inicio).count();
-    }
-
-    return tiempoTotalMicrosegundos;
-}
-
-// ============================================================================
-// MEDICIÓN DE BÚSQUEDA EN LISTA ORDENADA
-// Complejidad teórica: O(n) - Búsqueda secuencial (aunque ordenada)
-// Nota: La lista ordenada permite terminar antes si se pasa el elemento,
-// pero en el peor caso sigue siendo O(n)
-// ============================================================================
-long long MedidorRendimiento::medirBusquedaListaOrdenada(ListaEnlazadaOrdenada& lista,
-                                                         const std::string nombres[],
-                                                         int cantidad) const {
-    long long tiempoTotalMicrosegundos = 0;
+double MedidorRendimiento::medirBusquedaListaNormal(ListaEnlazada& lista,
+                                                    const std::string nombres[],
+                                                    int cantidad) const {
+    double tiempoTotalMs = 0.0;
 
     for (int repeticion = 0; repeticion < M; ++repeticion) {
         auto inicio = std::chrono::high_resolution_clock::now();
@@ -99,21 +56,44 @@ long long MedidorRendimiento::medirBusquedaListaOrdenada(ListaEnlazadaOrdenada& 
         }
 
         auto fin = std::chrono::high_resolution_clock::now();
-        tiempoTotalMicrosegundos +=
-            std::chrono::duration_cast<std::chrono::microseconds>(fin - inicio).count();
+        std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        tiempoTotalMs += duracion.count();
     }
 
-    return tiempoTotalMicrosegundos;
+    return tiempoTotalMs;
 }
 
 // ============================================================================
-// MEDICIÓN DE BÚSQUEDA EN ÁRBOL AVL
-// Complejidad teórica: O(log n) - Búsqueda binaria por estructura balanceada
+// MEDICIÓN EN LISTA ORDENADA - O(n)
 // ============================================================================
-long long MedidorRendimiento::medirBusquedaAVL(ArbolAVL& arbol,
-                                               const std::string nombres[],
-                                               int cantidad) const {
-    long long tiempoTotalMicrosegundos = 0;
+double MedidorRendimiento::medirBusquedaListaOrdenada(ListaEnlazadaOrdenada& lista,
+                                                      const std::string nombres[],
+                                                      int cantidad) const {
+    double tiempoTotalMs = 0.0;
+
+    for (int repeticion = 0; repeticion < M; ++repeticion) {
+        auto inicio = std::chrono::high_resolution_clock::now();
+
+        for (int i = 0; i < cantidad; ++i) {
+            volatile Producto* resultado = lista.buscarPorNombre(nombres[i]);
+            (void)resultado;
+        }
+
+        auto fin = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        tiempoTotalMs += duracion.count();
+    }
+
+    return tiempoTotalMs;
+}
+
+// ============================================================================
+// MEDICIÓN EN ÁRBOL AVL - O(log n)
+// ============================================================================
+double MedidorRendimiento::medirBusquedaAVL(ArbolAVL& arbol,
+                                            const std::string nombres[],
+                                            int cantidad) const {
+    double tiempoTotalMs = 0.0;
 
     for (int repeticion = 0; repeticion < M; ++repeticion) {
         auto inicio = std::chrono::high_resolution_clock::now();
@@ -124,143 +104,115 @@ long long MedidorRendimiento::medirBusquedaAVL(ArbolAVL& arbol,
         }
 
         auto fin = std::chrono::high_resolution_clock::now();
-        tiempoTotalMicrosegundos +=
-            std::chrono::duration_cast<std::chrono::microseconds>(fin - inicio).count();
+        std::chrono::duration<double, std::milli> duracion = fin - inicio;
+        tiempoTotalMs += duracion.count();
     }
 
-    return tiempoTotalMicrosegundos;
+    return tiempoTotalMs;
 }
 
 // ============================================================================
-// MEDICIÓN DE BÚSQUEDA EN TABLA HASH
-// Complejidad teórica: O(1) promedio, O(n) peor caso con colisiones
-// ============================================================================
-long long MedidorRendimiento::medirBusquedaHash(TablaHash& tabla,
-                                                const std::string codigos[],
-                                                int cantidad) const {
-    long long tiempoTotalMicrosegundos = 0;
-
-    for (int repeticion = 0; repeticion < M; ++repeticion) {
-        auto inicio = std::chrono::high_resolution_clock::now();
-
-        for (int i = 0; i < cantidad; ++i) {
-            volatile Producto* resultado = tabla.buscarPorCodigoBarras(codigos[i]);
-            (void)resultado;
-        }
-
-        auto fin = std::chrono::high_resolution_clock::now();
-        tiempoTotalMicrosegundos +=
-            std::chrono::duration_cast<std::chrono::microseconds>(fin - inicio).count();
-    }
-
-    return tiempoTotalMicrosegundos;
-}
-
-// ============================================================================
-// MÉTODOS DE PRESENTACIÓN DE RESULTADOS
+// MÉTODOS DE GENERACIÓN DE STRINGS
 // ============================================================================
 
-void MedidorRendimiento::imprimirResumenMetodologia() const {
-    std::cout << "\n";
-    std::cout << "╔══════════════════════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║            BENCHMARKING DE BUSQUEDAS - CATALOGO DE PRODUCTOS                 ║\n";
-    std::cout << "╠══════════════════════════════════════════════════════════════════════════════╣\n";
-    std::cout << "║  Metodologia segun enunciado:                                                ║\n";
-    std::cout << "║  - N = " << std::setw(2) << N << " consultas por prueba                                             ║\n";
-    std::cout << "║  - M = " << std::setw(2) << M << " repeticiones del experimento                                     ║\n";
-    std::cout << "║  - Tiempo promedio = (Suma de M mediciones) / M                              ║\n";
-    std::cout << "║  - Medicion = tiempo de ejecutar N busquedas consecutivas                    ║\n";
-    std::cout << "╚══════════════════════════════════════════════════════════════════════════════╝\n";
+std::string MedidorRendimiento::generarResumenMetodologia() const {
+    std::ostringstream ss;
+    ss << "\n";
+    ss << "+==============================================================================+\n";
+    ss << "|            BENCHMARKING DE BUSQUEDAS - CATALOGO DE PRODUCTOS                |\n";
+    ss << "+==============================================================================+\n";
+    ss << "|  Metodologia segun enunciado:                                               |\n";
+    ss << "|  - N = " << std::setw(2) << N << " consultas por prueba                                            |\n";
+    ss << "|  - M = " << std::setw(2) << M << " repeticiones del experimento                                    |\n";
+    ss << "|  - Tiempo promedio = (Suma de M mediciones) / M                             |\n";
+    ss << "|  - Medicion = tiempo de ejecutar N busquedas consecutivas                   |\n";
+    ss << "+==============================================================================+\n";
+    return ss.str();
 }
 
-void MedidorRendimiento::imprimirEncabezadoTabla() const {
-    std::cout << "\n";
-    std::cout << "┌────────────────────┬────────────────┬─────────────┬──────────────────────┐\n";
-    std::cout << "│";
-    std::cout << std::left << std::setw(20) << " Estructura";
-    std::cout << "│";
-    std::cout << std::setw(16) << " Tipo Busqueda";
-    std::cout << "│";
-    std::cout << std::setw(13) << " Complejidad";
-    std::cout << "│";
-    std::cout << std::setw(22) << " Tiempo Prom. (us)";
-    std::cout << "│\n";
-    std::cout << "├────────────────────┼────────────────┼─────────────┼──────────────────────┤\n";
+std::string MedidorRendimiento::generarEncabezadoTabla() const {
+    std::ostringstream ss;
+    ss << "\n";
+    ss << "+--------------------+----------------+-------------+----------------------+\n";
+    ss << "|";
+    ss << std::left << std::setw(20) << " Estructura";
+    ss << "|";
+    ss << std::setw(16) << " Tipo Busqueda";
+    ss << "|";
+    ss << std::setw(13) << " Complejidad";
+    ss << "|";
+    ss << std::setw(22) << " Tiempo Prom. (ms)";
+    ss << "|\n";
+    ss << "+--------------------+----------------+-------------+----------------------+\n";
+    return ss.str();
 }
 
-void MedidorRendimiento::imprimirSeparador() const {
-    std::cout << "├────────────────────┼────────────────┼─────────────┼──────────────────────┤\n";
+std::string MedidorRendimiento::generarSeparador() const {
+    return "+--------------------+----------------+-------------+----------------------+\n";
 }
 
-void MedidorRendimiento::imprimirFilaTabla(const std::string& estructura,
-                                           const std::string& tipoBusqueda,
-                                           const std::string& complejidad,
-                                           double tiempoPromedioMicrosegundos) const {
-    std::cout << "│ ";
-    std::cout << std::left << std::setw(19) << estructura;
-    std::cout << "│ ";
-    std::cout << std::setw(15) << tipoBusqueda;
-    std::cout << "│ ";
-    std::cout << std::setw(12) << complejidad;
-    std::cout << "│ ";
-    std::cout << std::right << std::setw(18) << std::fixed << std::setprecision(2) 
-              << tiempoPromedioMicrosegundos << " us";
-    std::cout << " │\n";
+std::string MedidorRendimiento::generarFilaTabla(const std::string& estructura,
+                                                  const std::string& tipoBusqueda,
+                                                  const std::string& complejidad,
+                                                  double tiempoPromedioMs) const {
+    std::ostringstream ss;
+    ss << "| ";
+    ss << std::left << std::setw(19) << estructura;
+    ss << "| ";
+    ss << std::setw(15) << tipoBusqueda;
+    ss << "| ";
+    ss << std::setw(12) << complejidad;
+    ss << "| ";
+    ss << std::right << std::setw(17) << std::fixed << std::setprecision(4) 
+       << tiempoPromedioMs << " ms";
+    ss << " |\n";
+    return ss.str();
 }
 
 // ============================================================================
 // MÉTODO PRINCIPAL: ejecutarPruebasBusqueda
-//
-// Ejecuta el benchmarking completo según el enunciado:
-// 1. Inicializa los datos de prueba desde el catálogo cargado
-// 2. Mide tiempos para cada estructura (Lista Normal, Lista Ordenada, AVL, Hash)
-// 3. Mide tanto búsquedas exitosas como fallidas
-// 4. Calcula promedios y presenta resultados en tabla ASCII
+// Retorna un string con toda la tabla ASCII (sin Tabla Hash)
 // ============================================================================
-void MedidorRendimiento::ejecutarPruebasBusqueda(ListaEnlazada& listaNormal,
-                                                 ListaEnlazadaOrdenada& listaOrdenada,
-                                                 ArbolAVL& arbolAVL,
-                                                 TablaHash& tablaHash) {
+std::string MedidorRendimiento::ejecutarPruebasBusqueda(ListaEnlazada& listaNormal,
+                                                         ListaEnlazadaOrdenada& listaOrdenada,
+                                                         ArbolAVL& arbolAVL,
+                                                         TablaHash& tablaHash) {
+    std::ostringstream resultado;
+    
     // Verificar que hay datos cargados
     if (listaNormal.estaVacia()) {
-        std::cout << "\n[ERROR] No hay productos cargados para ejecutar el benchmarking.\n";
-        std::cout << "Por favor, cargue primero un archivo CSV con productos.\n\n";
-        return;
+        resultado << "\n[ERROR] No hay productos cargados para ejecutar el benchmarking.\n";
+        resultado << "Por favor, cargue primero un archivo CSV con productos.\n\n";
+        return resultado.str();
     }
+
+    // Suprimir warning de parámetro no usado (TablaHash se mantiene en firma pero no se usa)
+    (void)tablaHash;
 
     // Inicializar datos de prueba desde el catálogo real
     inicializarDatosPrueba(listaNormal);
 
-    // Imprimir metodología
-    imprimirResumenMetodologia();
+    // Generar metodología
+    resultado << generarResumenMetodologia();
 
     // ========================================================================
-    // MEDICIONES: Ejecutar M repeticiones de N búsquedas cada una
+    // MEDICIONES
     // ========================================================================
 
-    // Lista Normal (No Ordenada) - Búsqueda secuencial O(n)
-    long long tiempoListaNormalExitosa = medirBusquedaListaNormal(
-        listaNormal, nombresExistentes, N);
-    long long tiempoListaNormalFallida = medirBusquedaListaNormal(
-        listaNormal, nombresInexistentes, N);
+    // Lista Normal
+    double tiempoListaNormalExitosa = medirBusquedaListaNormal(listaNormal, nombresExistentes, N);
+    double tiempoListaNormalFallida = medirBusquedaListaNormal(listaNormal, nombresInexistentes, N);
 
-    // Lista Ordenada - Búsqueda secuencial mejorada O(n)
-    long long tiempoListaOrdenadaExitosa = medirBusquedaListaOrdenada(
-        listaOrdenada, nombresExistentes, N);
-    long long tiempoListaOrdenadaFallida = medirBusquedaListaOrdenada(
-        listaOrdenada, nombresInexistentes, N);
+    // Lista Ordenada
+    double tiempoListaOrdenadaExitosa = medirBusquedaListaOrdenada(listaOrdenada, nombresExistentes, N);
+    double tiempoListaOrdenadaFallida = medirBusquedaListaOrdenada(listaOrdenada, nombresInexistentes, N);
 
-    // Árbol AVL - Búsqueda binaria O(log n)
-    long long tiempoAVLExitosa = medirBusquedaAVL(arbolAVL, nombresExistentes, N);
-    long long tiempoAVLFallida = medirBusquedaAVL(arbolAVL, nombresInexistentes, N);
-
-    // Tabla Hash - Búsqueda directa O(1) promedio
-    long long tiempoHashExitosa = medirBusquedaHash(tablaHash, codigosExistentes, N);
-    long long tiempoHashFallida = medirBusquedaHash(tablaHash, codigosInexistentes, N);
+    // Árbol AVL
+    double tiempoAVLExitosa = medirBusquedaAVL(arbolAVL, nombresExistentes, N);
+    double tiempoAVLFallida = medirBusquedaAVL(arbolAVL, nombresInexistentes, N);
 
     // ========================================================================
-    // CÁLCULO DE PROMEDIOS
-    // Promedio = Tiempo total acumulado / M repeticiones
+    // CÁLCULO DE PROMEDIOS (dividir entre M)
     // ========================================================================
     const double divisorM = static_cast<double>(M);
 
@@ -270,78 +222,69 @@ void MedidorRendimiento::ejecutarPruebasBusqueda(ListaEnlazada& listaNormal,
     double promedioListaOrdenadaFallida = tiempoListaOrdenadaFallida / divisorM;
     double promedioAVLExitosa = tiempoAVLExitosa / divisorM;
     double promedioAVLFallida = tiempoAVLFallida / divisorM;
-    double promedioHashExitosa = tiempoHashExitosa / divisorM;
-    double promedioHashFallida = tiempoHashFallida / divisorM;
 
     // ========================================================================
-    // PRESENTACIÓN DE RESULTADOS
+    // GENERAR TABLA
     // ========================================================================
-    imprimirEncabezadoTabla();
+    resultado << generarEncabezadoTabla();
 
-    // Lista Normal (No Ordenada)
-    imprimirFilaTabla("Lista Normal", "Exitosa", "O(n)", promedioListaNormalExitosa);
-    imprimirFilaTabla("Lista Normal", "Fallida", "O(n)", promedioListaNormalFallida);
-    imprimirSeparador();
+    // Lista Normal
+    resultado << generarFilaTabla("Lista Normal", "Exitosa", "O(n)", promedioListaNormalExitosa);
+    resultado << generarFilaTabla("Lista Normal", "Fallida", "O(n)", promedioListaNormalFallida);
+    resultado << generarSeparador();
 
     // Lista Ordenada
-    imprimirFilaTabla("Lista Ordenada", "Exitosa", "O(n)", promedioListaOrdenadaExitosa);
-    imprimirFilaTabla("Lista Ordenada", "Fallida", "O(n)", promedioListaOrdenadaFallida);
-    imprimirSeparador();
+    resultado << generarFilaTabla("Lista Ordenada", "Exitosa", "O(n)", promedioListaOrdenadaExitosa);
+    resultado << generarFilaTabla("Lista Ordenada", "Fallida", "O(n)", promedioListaOrdenadaFallida);
+    resultado << generarSeparador();
 
     // Árbol AVL
-    imprimirFilaTabla("Arbol AVL", "Exitosa", "O(log n)", promedioAVLExitosa);
-    imprimirFilaTabla("Arbol AVL", "Fallida", "O(log n)", promedioAVLFallida);
-    imprimirSeparador();
+    resultado << generarFilaTabla("Arbol AVL", "Exitosa", "O(log n)", promedioAVLExitosa);
+    resultado << generarFilaTabla("Arbol AVL", "Fallida", "O(log n)", promedioAVLFallida);
 
-    // Tabla Hash
-    imprimirFilaTabla("Tabla Hash", "Exitosa", "O(1)*", promedioHashExitosa);
-    imprimirFilaTabla("Tabla Hash", "Fallida", "O(1)*", promedioHashFallida);
+    resultado << "+--------------------+----------------+-------------+----------------------+\n";
 
-    std::cout << "└────────────────────┴────────────────┴─────────────┴──────────────────────┘\n";
-
-    // Notas al pie
-    std::cout << "\n";
-    std::cout << "  Notas:\n";
-    std::cout << "  - *O(1) es el caso promedio para Tabla Hash; peor caso es O(n) con colisiones.\n";
-    std::cout << "  - Tiempos en microsegundos (us). 1 ms = 1000 us.\n";
-    std::cout << "  - Cada medicion ejecuta " << N << " busquedas consecutivas.\n";
-    std::cout << "  - El promedio se calcula sobre " << M << " repeticiones del experimento.\n";
-    std::cout << "\n";
+    // Notas
+    resultado << "\n";
+    resultado << "  Notas:\n";
+    resultado << "  - Tiempos en milisegundos (ms).\n";
+    resultado << "  - Cada medicion ejecuta " << N << " busquedas consecutivas.\n";
+    resultado << "  - El promedio se calcula sobre " << M << " repeticiones del experimento.\n";
+    resultado << "\n";
 
     // ========================================================================
     // ANÁLISIS COMPARATIVO
     // ========================================================================
-    std::cout << "┌──────────────────────────────────────────────────────────────────────────────┐\n";
-    std::cout << "│                           ANALISIS COMPARATIVO                               │\n";
-    std::cout << "├──────────────────────────────────────────────────────────────────────────────┤\n";
+    resultado << "+------------------------------------------------------------------------------+\n";
+    resultado << "|                           ANALISIS COMPARATIVO                              |\n";
+    resultado << "+------------------------------------------------------------------------------+\n";
 
-    // Encontrar el más rápido para búsqueda exitosa
-    double tiempos[4] = {promedioListaNormalExitosa, promedioListaOrdenadaExitosa, 
-                         promedioAVLExitosa, promedioHashExitosa};
-    const char* nombres[4] = {"Lista Normal", "Lista Ordenada", "Arbol AVL", "Tabla Hash"};
+    // Encontrar el más rápido
+    double tiempos[3] = {promedioListaNormalExitosa, promedioListaOrdenadaExitosa, promedioAVLExitosa};
+    const char* nombres[3] = {"Lista Normal", "Lista Ordenada", "Arbol AVL"};
     
     int indiceMinimo = 0;
-    for (int i = 1; i < 4; ++i) {
+    for (int i = 1; i < 3; ++i) {
         if (tiempos[i] < tiempos[indiceMinimo]) {
             indiceMinimo = i;
         }
     }
 
-    std::cout << "│  Estructura mas rapida (busqueda exitosa): " 
-              << std::left << std::setw(32) << nombres[indiceMinimo] << "│\n";
+    resultado << "|  Estructura mas rapida (busqueda exitosa): " 
+              << std::left << std::setw(31) << nombres[indiceMinimo] << "|\n";
 
-    // Calcular speedup vs Lista Normal
-    if (promedioListaNormalExitosa > 0) {
+    // Speedup AVL vs Lista Normal
+    if (promedioListaNormalExitosa > 0 && promedioAVLExitosa > 0) {
         double speedupAVL = promedioListaNormalExitosa / promedioAVLExitosa;
-        double speedupHash = promedioListaNormalExitosa / promedioHashExitosa;
         
-        std::cout << "│  Speedup AVL vs Lista Normal: " 
-                  << std::right << std::setw(8) << std::fixed << std::setprecision(2) 
-                  << speedupAVL << "x" << std::setw(36) << " " << "│\n";
-        std::cout << "│  Speedup Hash vs Lista Normal: " 
-                  << std::right << std::setw(7) << std::fixed << std::setprecision(2) 
-                  << speedupHash << "x" << std::setw(36) << " " << "│\n";
+        std::ostringstream ssSpeedup;
+        ssSpeedup << std::fixed << std::setprecision(2) << speedupAVL << "x";
+        
+        resultado << "|  Speedup AVL vs Lista Normal: " 
+                  << std::left << std::setw(44) << ssSpeedup.str() << "|\n";
     }
 
-    std::cout << "└──────────────────────────────────────────────────────────────────────────────┘\n\n";
+    resultado << "+------------------------------------------------------------------------------+\n\n";
+
+    return resultado.str();
 }

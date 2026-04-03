@@ -19,6 +19,14 @@
 #include <QDialog>
 #include <QFormLayout>
 #include <QDir>
+#include <QTextEdit>
+#include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QPixmap>
+#include <QTabWidget>
+#include <QFontDatabase>
+#include <QWheelEvent>
+#include <QSlider>
 #include <vector>
 
 // Incluir estructuras de datos del backend

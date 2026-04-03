@@ -6,6 +6,8 @@
 #include <QIntValidator>
 #include <QStatusBar>
 #include <QDialogButtonBox>
+#include <QPainter>
+#include <QBrush>
 
 // =============================================================================
 // Constructor: Inicializa la ventana principal con referencias al backend
@@ -39,7 +41,7 @@ VentanaPrincipal::VentanaPrincipal(
       refArbolBPlus(arbolBPlus) {
     
     // Configurar ventana principal
-    setWindowTitle("Catálogo de Productos - Proyecto EDD 2026");
+    setWindowTitle("Catalogo P1 EDD KIKE");
     setMinimumSize(1200, 700);
     resize(1400, 800);
 
@@ -106,32 +108,32 @@ void VentanaPrincipal::configurarSidebar() {
     layoutSidebar->setSpacing(12);
 
     // Título del sidebar
-    lblTitulo = new QLabel("📦 Catálogo EDD", panelSidebar);
+    lblTitulo = new QLabel("Catalogo EDD", panelSidebar);
     lblTitulo->setObjectName("lblTitulo");
     lblTitulo->setAlignment(Qt::AlignCenter);
 
     // Crear botones del menú
-    btnCargarCSV = new QPushButton("📂 Cargar CSV", panelSidebar);
+    btnCargarCSV = new QPushButton("Cargar CSV", panelSidebar);
     btnCargarCSV->setObjectName("btnSidebar");
     btnCargarCSV->setCursor(Qt::PointingHandCursor);
 
-    btnInsertar = new QPushButton("➕ Insertar Producto", panelSidebar);
+    btnInsertar = new QPushButton("Insertar Producto", panelSidebar);
     btnInsertar->setObjectName("btnSidebar");
     btnInsertar->setCursor(Qt::PointingHandCursor);
 
-    btnEliminar = new QPushButton("🗑️ Eliminar Producto", panelSidebar);
+    btnEliminar = new QPushButton("Eliminar Producto", panelSidebar);
     btnEliminar->setObjectName("btnSidebar");
     btnEliminar->setCursor(Qt::PointingHandCursor);
 
-    btnBuscar = new QPushButton("🔍 Buscar Producto", panelSidebar);
+    btnBuscar = new QPushButton("Buscar Producto", panelSidebar);
     btnBuscar->setObjectName("btnSidebar");
     btnBuscar->setCursor(Qt::PointingHandCursor);
 
-    btnReportes = new QPushButton("📊 Generar Reportes", panelSidebar);
+    btnReportes = new QPushButton("Generar Reportes", panelSidebar);
     btnReportes->setObjectName("btnSidebar");
     btnReportes->setCursor(Qt::PointingHandCursor);
 
-    btnBenchmarking = new QPushButton("⏱️ Pruebas Rendimiento", panelSidebar);
+    btnBenchmarking = new QPushButton("Pruebas Rendimiento", panelSidebar);
     btnBenchmarking->setObjectName("btnSidebar");
     btnBenchmarking->setCursor(Qt::PointingHandCursor);
 
@@ -173,19 +175,18 @@ void VentanaPrincipal::configurarBarraBusqueda() {
     lblBuscarPor = new QLabel("Buscar por:", barraBusqueda);
     lblBuscarPor->setObjectName("lblBuscarPor");
     
-    // ComboBox con tipos de búsqueda
+    // ComboBox con tipos de búsqueda (sin Tabla Hash)
     comboFiltroBusqueda = new QComboBox(barraBusqueda);
     comboFiltroBusqueda->setObjectName("comboFiltroBusqueda");
-    comboFiltroBusqueda->addItem("Código (Hash)");
     comboFiltroBusqueda->addItem("Nombre (AVL)");
-    comboFiltroBusqueda->addItem("Categoría (B+)");
+    comboFiltroBusqueda->addItem("Categoria (B+)");
     comboFiltroBusqueda->addItem("Rango de Fecha (B)");
     comboFiltroBusqueda->setFixedWidth(180);
     
     // Input de búsqueda principal
     inputBusqueda = new QLineEdit(barraBusqueda);
     inputBusqueda->setObjectName("inputBusqueda");
-    inputBusqueda->setPlaceholderText("Ingrese término...");
+    inputBusqueda->setPlaceholderText("Nombre del producto...");
     inputBusqueda->setMinimumWidth(200);
     
     // Input secundario para rango de fechas (oculto por defecto)
@@ -196,13 +197,13 @@ void VentanaPrincipal::configurarBarraBusqueda() {
     inputBusquedaFin->setVisible(false);
     
     // Botón buscar
-    btnEjecutarBusqueda = new QPushButton("🔍 Buscar", barraBusqueda);
+    btnEjecutarBusqueda = new QPushButton("Buscar", barraBusqueda);
     btnEjecutarBusqueda->setObjectName("btnBusqueda");
     btnEjecutarBusqueda->setCursor(Qt::PointingHandCursor);
     btnEjecutarBusqueda->setFixedWidth(100);
     
     // Botón mostrar todos
-    btnMostrarTodos = new QPushButton("📋 Mostrar Todos", barraBusqueda);
+    btnMostrarTodos = new QPushButton("Mostrar Todos", barraBusqueda);
     btnMostrarTodos->setObjectName("btnMostrarTodos");
     btnMostrarTodos->setCursor(Qt::PointingHandCursor);
     btnMostrarTodos->setFixedWidth(130);
@@ -214,7 +215,7 @@ void VentanaPrincipal::configurarBarraBusqueda() {
     layoutBarraBusqueda->addWidget(inputBusquedaFin);
     layoutBarraBusqueda->addWidget(btnEjecutarBusqueda);
     layoutBarraBusqueda->addWidget(btnMostrarTodos);
-    layoutBarraBusqueda->addStretch();  // Empujar a la izquierda
+    layoutBarraBusqueda->addStretch();
 }
 
 // =============================================================================
@@ -654,7 +655,7 @@ void VentanaPrincipal::actualizarTabla() {
 void VentanaPrincipal::onInsertarProducto() {
     // Crear diálogo de inserción
     QDialog dialogo(this);
-    dialogo.setWindowTitle("➕ Insertar Nuevo Producto");
+    dialogo.setWindowTitle("Insertar Nuevo Producto");
     dialogo.setMinimumWidth(400);
     
     // Layout principal del diálogo
@@ -696,13 +697,13 @@ void VentanaPrincipal::onInsertarProducto() {
     inputStock->setPlaceholderText("0");
     inputStock->setValidator(new QIntValidator(0, 1000000, &dialogo));
     
-    formLayout->addRow("📦 Nombre:", inputNombre);
-    formLayout->addRow("🏷️ Código de Barras:", inputCodigo);
-    formLayout->addRow("📁 Categoría:", inputCategoria);
-    formLayout->addRow("📅 Fecha Caducidad:", inputFecha);
-    formLayout->addRow("🏢 Marca:", inputMarca);
-    formLayout->addRow("💰 Precio (Q):", inputPrecio);
-    formLayout->addRow("📊 Stock:", inputStock);
+    formLayout->addRow("Nombre:", inputNombre);
+    formLayout->addRow("Codigo de Barras:", inputCodigo);
+    formLayout->addRow("Categoria:", inputCategoria);
+    formLayout->addRow("Fecha Caducidad:", inputFecha);
+    formLayout->addRow("Marca:", inputMarca);
+    formLayout->addRow("Precio (Q):", inputPrecio);
+    formLayout->addRow("Stock:", inputStock);
     
     layoutDialogo->addLayout(formLayout);
     
@@ -720,7 +721,7 @@ void VentanaPrincipal::onInsertarProducto() {
     btnCancelar->setStyleSheet("background-color: #6c757d;");
     btnCancelar->setFixedWidth(100);
     
-    QPushButton* btnAceptar = new QPushButton("✓ Insertar");
+    QPushButton* btnAceptar = new QPushButton("Insertar");
     btnAceptar->setDefault(true);
     btnAceptar->setFixedWidth(100);
     
@@ -879,16 +880,16 @@ void VentanaPrincipal::onBuscarProducto() {
 
     // Mostrar información del producto
     QString info = QString(
-        "═══════════════════════════════════\n"
+        "===================================\n"
         "      PRODUCTO ENCONTRADO\n"
-        "═══════════════════════════════════\n\n"
-        "📦 Nombre: %1\n"
-        "🏷️ Código: %2\n"
-        "📁 Categoría: %3\n"
-        "🏢 Marca: %4\n"
-        "💰 Precio: Q %5\n"
-        "📊 Stock: %6 unidades\n"
-        "📅 Caducidad: %7\n"
+        "===================================\n\n"
+        "Nombre: %1\n"
+        "Codigo: %2\n"
+        "Categoria: %3\n"
+        "Marca: %4\n"
+        "Precio: Q %5\n"
+        "Stock: %6 unidades\n"
+        "Caducidad: %7\n"
     )
     .arg(QString::fromStdString(producto->nombre))
     .arg(QString::fromStdString(producto->codigoBarras))
@@ -924,20 +925,98 @@ void VentanaPrincipal::onGenerarReportes() {
     refArbolB.generarImagen();
     refArbolBPlus.generarImagen();
 
-    QMessageBox::information(
-        this,
-        "Reportes Generados",
-        "Se han generado los siguientes archivos en la carpeta 'data/':\n\n"
-        "📊 avl.png - Árbol AVL (ordenado por nombre)\n"
-        "📊 arbol_b.png - Árbol B (por fecha de caducidad)\n"
-        "📊 arbol_bplus.png - Árbol B+ (por categoría)\n\n"
-        "También se generaron los archivos .dot correspondientes."
-    );
+    // Crear diálogo visor con pestañas
+    QDialog* visor = new QDialog(this);
+    visor->setWindowTitle("Visor de Arboles - Reportes Graphviz");
+    visor->resize(1000, 700);
+    visor->setWindowFlags(visor->windowFlags() | Qt::WindowMaximizeButtonHint);
+    
+    QVBoxLayout* layoutVisor = new QVBoxLayout(visor);
+    
+    // TabWidget para las 3 pestañas
+    QTabWidget* tabs = new QTabWidget(visor);
+    
+    // Función auxiliar para crear pestaña con imagen
+    auto crearPestana = [&](const QString& titulo, const QString& rutaImagen) -> QWidget* {
+        QWidget* pestana = new QWidget();
+        QVBoxLayout* layoutPestana = new QVBoxLayout(pestana);
+        layoutPestana->setContentsMargins(5, 5, 5, 5);
+        
+        // Controles de zoom
+        QHBoxLayout* layoutControles = new QHBoxLayout();
+        QPushButton* btnZoomIn = new QPushButton("+");
+        btnZoomIn->setFixedSize(40, 30);
+        QPushButton* btnZoomOut = new QPushButton("-");
+        btnZoomOut->setFixedSize(40, 30);
+        QPushButton* btnResetZoom = new QPushButton("Reset");
+        btnResetZoom->setFixedWidth(60);
+        QLabel* lblZoom = new QLabel("Zoom:");
+        
+        layoutControles->addWidget(lblZoom);
+        layoutControles->addWidget(btnZoomOut);
+        layoutControles->addWidget(btnZoomIn);
+        layoutControles->addWidget(btnResetZoom);
+        layoutControles->addStretch();
+        
+        // GraphicsView y Scene
+        QGraphicsScene* scene = new QGraphicsScene(pestana);
+        QGraphicsView* view = new QGraphicsView(scene, pestana);
+        view->setDragMode(QGraphicsView::ScrollHandDrag);
+        view->setRenderHint(QPainter::Antialiasing);
+        view->setRenderHint(QPainter::SmoothPixmapTransform);
+        view->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+        view->setBackgroundBrush(QBrush(QColor(240, 240, 240)));
+        
+        // Cargar imagen
+        QPixmap pixmap(rutaImagen);
+        if (!pixmap.isNull()) {
+            scene->addPixmap(pixmap);
+            scene->setSceneRect(pixmap.rect());
+        } else {
+            scene->addText("No se pudo cargar: " + rutaImagen);
+        }
+        
+        // Conectar botones de zoom
+        connect(btnZoomIn, &QPushButton::clicked, [view]() {
+            view->scale(1.25, 1.25);
+        });
+        connect(btnZoomOut, &QPushButton::clicked, [view]() {
+            view->scale(0.8, 0.8);
+        });
+        connect(btnResetZoom, &QPushButton::clicked, [view]() {
+            view->resetTransform();
+        });
+        
+        layoutPestana->addLayout(layoutControles);
+        layoutPestana->addWidget(view);
+        
+        return pestana;
+    };
+    
+    // Crear las 3 pestañas
+    tabs->addTab(crearPestana("Arbol AVL", "data/avl.png"), "Arbol AVL");
+    tabs->addTab(crearPestana("Arbol B", "data/arbol_b.png"), "Arbol B");
+    tabs->addTab(crearPestana("Arbol B+", "data/arbol_bplus.png"), "Arbol B+");
+    
+    layoutVisor->addWidget(tabs);
+    
+    // Botón cerrar
+    QPushButton* btnCerrar = new QPushButton("Cerrar");
+    btnCerrar->setFixedWidth(100);
+    connect(btnCerrar, &QPushButton::clicked, visor, &QDialog::accept);
+    
+    QHBoxLayout* layoutBoton = new QHBoxLayout();
+    layoutBoton->addStretch();
+    layoutBoton->addWidget(btnCerrar);
+    layoutVisor->addLayout(layoutBoton);
+    
+    visor->exec();
+    delete visor;
 }
 
 // =============================================================================
 // SLOT: Ejecutar pruebas de rendimiento (Benchmarking)
-// Ejecuta el MedidorRendimiento (salida en consola)
+// Muestra resultados en QDialog con QTextEdit monoespaciado
 // =============================================================================
 void VentanaPrincipal::onBenchmarking() {
     if (refListaNormal.estaVacia()) {
@@ -947,27 +1026,58 @@ void VentanaPrincipal::onBenchmarking() {
         return;
     }
 
-    // Ejecutar benchmarking (imprime en consola)
+    // Ejecutar benchmarking y obtener resultado como string
     MedidorRendimiento medidor;
-    medidor.ejecutarPruebasBusqueda(
+    std::string resultado = medidor.ejecutarPruebasBusqueda(
         refListaNormal,
         refListaOrdenada,
         refArbolAVL,
         refTablaHash
     );
 
-    QMessageBox::information(
-        this,
-        "Benchmarking Completado",
-        "Las pruebas de rendimiento se han ejecutado.\n\n"
-        "📋 Por favor, revise la salida en la terminal/consola\n"
-        "para ver la tabla comparativa de tiempos.\n\n"
-        "Estructuras probadas:\n"
-        "• Lista Normal (O(n))\n"
-        "• Lista Ordenada (O(n))\n"
-        "• Árbol AVL (O(log n))\n"
-        "• Tabla Hash (O(1))"
+    // Crear diálogo para mostrar resultados
+    QDialog* dialogo = new QDialog(this);
+    dialogo->setWindowTitle("Resultados de Benchmarking");
+    dialogo->resize(700, 550);
+    dialogo->setWindowFlags(dialogo->windowFlags() | Qt::WindowMaximizeButtonHint);
+    
+    QVBoxLayout* layout = new QVBoxLayout(dialogo);
+    layout->setContentsMargins(15, 15, 15, 15);
+    
+    // Título
+    QLabel* lblTitulo = new QLabel("Pruebas de Rendimiento - Estructuras de Datos");
+    lblTitulo->setStyleSheet("font-size: 16px; font-weight: bold; color: #004D98; margin-bottom: 10px;");
+    lblTitulo->setAlignment(Qt::AlignCenter);
+    layout->addWidget(lblTitulo);
+    
+    // QTextEdit con fuente monoespaciada
+    QTextEdit* textEdit = new QTextEdit(dialogo);
+    textEdit->setReadOnly(true);
+    textEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    textEdit->setText(QString::fromStdString(resultado));
+    textEdit->setStyleSheet(
+        "QTextEdit {"
+        "  background-color: #1e1e1e;"
+        "  color: #d4d4d4;"
+        "  border: 1px solid #333;"
+        "  border-radius: 4px;"
+        "  padding: 10px;"
+        "  font-size: 12px;"
+        "}"
     );
+    layout->addWidget(textEdit);
+    
+    // Botón cerrar
+    QHBoxLayout* layoutBoton = new QHBoxLayout();
+    QPushButton* btnCerrar = new QPushButton("Cerrar");
+    btnCerrar->setFixedWidth(100);
+    connect(btnCerrar, &QPushButton::clicked, dialogo, &QDialog::accept);
+    layoutBoton->addStretch();
+    layoutBoton->addWidget(btnCerrar);
+    layout->addLayout(layoutBoton);
+    
+    dialogo->exec();
+    delete dialogo;
 }
 
 // =============================================================================
@@ -975,22 +1085,19 @@ void VentanaPrincipal::onBenchmarking() {
 // Muestra/oculta el input de fecha fin según selección
 // =============================================================================
 void VentanaPrincipal::onCambioFiltroBusqueda(int indice) {
-    // Índice 3 = "Rango de Fecha (B)"
-    bool esRango = (indice == 3);
+    // Índice 2 = "Rango de Fecha (B)" (ahora sin Hash)
+    bool esRango = (indice == 2);
     inputBusquedaFin->setVisible(esRango);
     
     // Actualizar placeholder según tipo de búsqueda
     switch (indice) {
-        case 0:  // Código (Hash)
-            inputBusqueda->setPlaceholderText("Código de barras...");
-            break;
-        case 1:  // Nombre (AVL)
+        case 0:  // Nombre (AVL)
             inputBusqueda->setPlaceholderText("Nombre del producto...");
             break;
-        case 2:  // Categoría (B+)
-            inputBusqueda->setPlaceholderText("Categoría (ej: Lacteos)...");
+        case 1:  // Categoría (B+)
+            inputBusqueda->setPlaceholderText("Categoria (ej: Lacteos)...");
             break;
-        case 3:  // Rango de Fecha (B)
+        case 2:  // Rango de Fecha (B)
             inputBusqueda->setPlaceholderText("Fecha inicio (YYYY-MM-DD)");
             break;
     }
@@ -1005,8 +1112,8 @@ void VentanaPrincipal::ejecutarBusquedaAvanzada() {
     QString termino = inputBusqueda->text().trimmed();
     
     if (termino.isEmpty()) {
-        QMessageBox::warning(this, "Campo Vacío", 
-            "Por favor, ingrese un término de búsqueda.");
+        QMessageBox::warning(this, "Campo Vacio", 
+            "Por favor, ingrese un termino de busqueda.");
         return;
     }
     
@@ -1014,29 +1121,22 @@ void VentanaPrincipal::ejecutarBusquedaAvanzada() {
     std::vector<Producto*> resultados;
     
     switch (filtro) {
-        case 0: {  // Código (Hash)
-            Producto* p = refTablaHash.buscarPorCodigoBarras(termino.toStdString());
-            if (p != nullptr) {
-                resultados.push_back(p);
-            }
-            break;
-        }
-        case 1: {  // Nombre (AVL)
+        case 0: {  // Nombre (AVL)
             Producto* p = refArbolAVL.buscarPorNombre(termino.toStdString());
             if (p != nullptr) {
                 resultados.push_back(p);
             }
             break;
         }
-        case 2: {  // Categoría (B+)
+        case 1: {  // Categoría (B+)
             resultados = refArbolBPlus.obtenerPorCategoria(termino.toStdString());
             break;
         }
-        case 3: {  // Rango de Fecha (B)
+        case 2: {  // Rango de Fecha (B)
             QString fechaFin = inputBusquedaFin->text().trimmed();
             if (fechaFin.isEmpty()) {
                 QMessageBox::warning(this, "Fecha Fin Requerida",
-                    "Para búsqueda por rango, ingrese también la fecha de fin.");
+                    "Para busqueda por rango, ingrese tambien la fecha de fin.");
                 return;
             }
             resultados = refArbolB.obtenerPorRango(termino.toStdString(), fechaFin.toStdString());
@@ -1053,8 +1153,7 @@ void VentanaPrincipal::ejecutarBusquedaAvanzada() {
             "No se encontraron productos con el criterio especificado.");
     } else {
         QString msg = QString("Se encontraron %1 producto(s).").arg(resultados.size());
-        // Status bar o breve indicación (no intrusivo)
-        statusBar()->showMessage(msg, 5000);  // 5 segundos
+        statusBar()->showMessage(msg, 5000);
     }
 }
 
