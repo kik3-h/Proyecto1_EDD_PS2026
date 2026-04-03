@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include "ListaEnlazada.h"
 #include "Producto.h"
@@ -43,6 +44,10 @@ private:
                               const std::string& fechaInicio,
                               const std::string& fechaFin,
                               int& contador) const;
+    void obtenerRangoRecursivo(NodoB* nodo,
+                               const std::string& fechaInicio,
+                               const std::string& fechaFin,
+                               std::vector<Producto*>& resultado) const;
 
     void destruirRecursivo(NodoB* nodo);
 
@@ -55,6 +60,9 @@ public:
 
     void insertar(Producto* producto);
     void buscarPorRango(const std::string& fechaInicio, const std::string& fechaFin) const;
+    
+    // Retorna productos en un rango de fechas (para GUI)
+    std::vector<Producto*> obtenerPorRango(const std::string& fechaInicio, const std::string& fechaFin) const;
 
     void generarDot(const std::string& rutaArchivo) const;
     void generarImagen() const;

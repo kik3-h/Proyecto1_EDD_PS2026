@@ -1,0 +1,1096 @@
+#include "VentanaPrincipal.h"
+
+#include <vector>
+#include <QTableWidgetItem>
+#include <QDoubleValidator>
+#include <QIntValidator>
+#include <QStatusBar>
+#include <QDialogButtonBox>
+
+// =============================================================================
+// Constructor: Inicializa la ventana principal con referencias al backend
+// =============================================================================
+VentanaPrincipal::VentanaPrincipal(
+    ListaEnlazada& listaNormal,
+    ListaEnlazadaOrdenada& listaOrdenada,
+    TablaHash& tablaHash,
+    ArbolAVL& arbolAVL,
+    ArbolB& arbolB,
+    ArbolBPlus& arbolBPlus,
+    QWidget* parent)
+    : QMainWindow(parent),
+      widgetCentral(nullptr),
+      layoutPrincipal(nullptr),
+      panelSidebar(nullptr),
+      layoutSidebar(nullptr),
+      lblTitulo(nullptr),
+      btnCargarCSV(nullptr),
+      btnInsertar(nullptr),
+      btnEliminar(nullptr),
+      btnBuscar(nullptr),
+      btnReportes(nullptr),
+      btnBenchmarking(nullptr),
+      tablaProductos(nullptr),
+      refListaNormal(listaNormal),
+      refListaOrdenada(listaOrdenada),
+      refTablaHash(tablaHash),
+      refArbolAVL(arbolAVL),
+      refArbolB(arbolB),
+      refArbolBPlus(arbolBPlus) {
+    
+    // Configurar ventana principal
+    setWindowTitle("Catálogo de Productos - Proyecto EDD 2026");
+    setMinimumSize(1200, 700);
+    resize(1400, 800);
+
+    // Inicializar componentes
+    configurarInterfaz();
+    aplicarEstilos();
+    conectarSenales();
+}
+
+// =============================================================================
+// Destructor
+// =============================================================================
+VentanaPrincipal::~VentanaPrincipal() {
+    // Qt maneja la memoria de los widgets hijos automáticamente
+}
+
+// =============================================================================
+// Configurar la interfaz principal
+// =============================================================================
+void VentanaPrincipal::configurarInterfaz() {
+    // Crear widget central
+    widgetCentral = new QWidget(this);
+    setCentralWidget(widgetCentral);
+
+    // Layout horizontal principal (sidebar | contenido)
+    layoutPrincipal = new QHBoxLayout(widgetCentral);
+    layoutPrincipal->setContentsMargins(0, 0, 0, 0);
+    layoutPrincipal->setSpacing(0);
+
+    // Configurar sidebar
+    configurarSidebar();
+    
+    // Crear panel de contenido (derecha)
+    panelContenido = new QWidget(widgetCentral);
+    layoutContenido = new QVBoxLayout(panelContenido);
+    layoutContenido->setContentsMargins(10, 10, 10, 10);
+    layoutContenido->setSpacing(10);
+    
+    // Configurar barra de búsqueda y tabla
+    configurarBarraBusqueda();
+    configurarTabla();
+    
+    // Agregar barra de búsqueda y tabla al panel de contenido
+    layoutContenido->addWidget(barraBusqueda);
+    layoutContenido->addWidget(tablaProductos, 1);  // stretch=1 para expandir
+
+    // Agregar widgets al layout principal
+    layoutPrincipal->addWidget(panelSidebar);
+    layoutPrincipal->addWidget(panelContenido, 1);
+}
+
+// =============================================================================
+// Configurar el panel lateral (Sidebar)
+// =============================================================================
+void VentanaPrincipal::configurarSidebar() {
+    // Frame contenedor del sidebar
+    panelSidebar = new QFrame(widgetCentral);
+    panelSidebar->setObjectName("panelSidebar");
+    panelSidebar->setFixedWidth(250);
+
+    // Layout vertical para el sidebar
+    layoutSidebar = new QVBoxLayout(panelSidebar);
+    layoutSidebar->setContentsMargins(15, 20, 15, 20);
+    layoutSidebar->setSpacing(12);
+
+    // Título del sidebar
+    lblTitulo = new QLabel("📦 Catálogo EDD", panelSidebar);
+    lblTitulo->setObjectName("lblTitulo");
+    lblTitulo->setAlignment(Qt::AlignCenter);
+
+    // Crear botones del menú
+    btnCargarCSV = new QPushButton("📂 Cargar CSV", panelSidebar);
+    btnCargarCSV->setObjectName("btnSidebar");
+    btnCargarCSV->setCursor(Qt::PointingHandCursor);
+
+    btnInsertar = new QPushButton("➕ Insertar Producto", panelSidebar);
+    btnInsertar->setObjectName("btnSidebar");
+    btnInsertar->setCursor(Qt::PointingHandCursor);
+
+    btnEliminar = new QPushButton("🗑️ Eliminar Producto", panelSidebar);
+    btnEliminar->setObjectName("btnSidebar");
+    btnEliminar->setCursor(Qt::PointingHandCursor);
+
+    btnBuscar = new QPushButton("🔍 Buscar Producto", panelSidebar);
+    btnBuscar->setObjectName("btnSidebar");
+    btnBuscar->setCursor(Qt::PointingHandCursor);
+
+    btnReportes = new QPushButton("📊 Generar Reportes", panelSidebar);
+    btnReportes->setObjectName("btnSidebar");
+    btnReportes->setCursor(Qt::PointingHandCursor);
+
+    btnBenchmarking = new QPushButton("⏱️ Pruebas Rendimiento", panelSidebar);
+    btnBenchmarking->setObjectName("btnSidebar");
+    btnBenchmarking->setCursor(Qt::PointingHandCursor);
+
+    // Agregar widgets al layout del sidebar
+    layoutSidebar->addWidget(lblTitulo);
+    layoutSidebar->addSpacing(20);
+    layoutSidebar->addWidget(btnCargarCSV);
+    layoutSidebar->addWidget(btnInsertar);
+    layoutSidebar->addWidget(btnEliminar);
+    layoutSidebar->addWidget(btnBuscar);
+    layoutSidebar->addWidget(btnReportes);
+    layoutSidebar->addWidget(btnBenchmarking);
+
+    // Espaciador para empujar botones hacia arriba
+    layoutSidebar->addSpacerItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, 
+                                                  QSizePolicy::Expanding));
+
+    // Etiqueta de versión al fondo
+    QLabel* lblVersion = new QLabel("v1.0.0 - USAC 2026", panelSidebar);
+    lblVersion->setObjectName("lblVersion");
+    lblVersion->setAlignment(Qt::AlignCenter);
+    layoutSidebar->addWidget(lblVersion);
+}
+
+// =============================================================================
+// Configurar la barra de búsqueda avanzada
+// =============================================================================
+void VentanaPrincipal::configurarBarraBusqueda() {
+    // Contenedor de la barra de búsqueda
+    barraBusqueda = new QWidget(panelContenido);
+    barraBusqueda->setObjectName("barraBusqueda");
+    barraBusqueda->setFixedHeight(50);
+    
+    layoutBarraBusqueda = new QHBoxLayout(barraBusqueda);
+    layoutBarraBusqueda->setContentsMargins(5, 5, 5, 5);
+    layoutBarraBusqueda->setSpacing(10);
+    
+    // Label "Buscar por:"
+    lblBuscarPor = new QLabel("Buscar por:", barraBusqueda);
+    lblBuscarPor->setObjectName("lblBuscarPor");
+    
+    // ComboBox con tipos de búsqueda
+    comboFiltroBusqueda = new QComboBox(barraBusqueda);
+    comboFiltroBusqueda->setObjectName("comboFiltroBusqueda");
+    comboFiltroBusqueda->addItem("Código (Hash)");
+    comboFiltroBusqueda->addItem("Nombre (AVL)");
+    comboFiltroBusqueda->addItem("Categoría (B+)");
+    comboFiltroBusqueda->addItem("Rango de Fecha (B)");
+    comboFiltroBusqueda->setFixedWidth(180);
+    
+    // Input de búsqueda principal
+    inputBusqueda = new QLineEdit(barraBusqueda);
+    inputBusqueda->setObjectName("inputBusqueda");
+    inputBusqueda->setPlaceholderText("Ingrese término...");
+    inputBusqueda->setMinimumWidth(200);
+    
+    // Input secundario para rango de fechas (oculto por defecto)
+    inputBusquedaFin = new QLineEdit(barraBusqueda);
+    inputBusquedaFin->setObjectName("inputBusquedaFin");
+    inputBusquedaFin->setPlaceholderText("Fecha fin (YYYY-MM-DD)");
+    inputBusquedaFin->setFixedWidth(160);
+    inputBusquedaFin->setVisible(false);
+    
+    // Botón buscar
+    btnEjecutarBusqueda = new QPushButton("🔍 Buscar", barraBusqueda);
+    btnEjecutarBusqueda->setObjectName("btnBusqueda");
+    btnEjecutarBusqueda->setCursor(Qt::PointingHandCursor);
+    btnEjecutarBusqueda->setFixedWidth(100);
+    
+    // Botón mostrar todos
+    btnMostrarTodos = new QPushButton("📋 Mostrar Todos", barraBusqueda);
+    btnMostrarTodos->setObjectName("btnMostrarTodos");
+    btnMostrarTodos->setCursor(Qt::PointingHandCursor);
+    btnMostrarTodos->setFixedWidth(130);
+    
+    // Agregar widgets al layout
+    layoutBarraBusqueda->addWidget(lblBuscarPor);
+    layoutBarraBusqueda->addWidget(comboFiltroBusqueda);
+    layoutBarraBusqueda->addWidget(inputBusqueda);
+    layoutBarraBusqueda->addWidget(inputBusquedaFin);
+    layoutBarraBusqueda->addWidget(btnEjecutarBusqueda);
+    layoutBarraBusqueda->addWidget(btnMostrarTodos);
+    layoutBarraBusqueda->addStretch();  // Empujar a la izquierda
+}
+
+// =============================================================================
+// Configurar la tabla de productos
+// =============================================================================
+void VentanaPrincipal::configurarTabla() {
+    tablaProductos = new QTableWidget(widgetCentral);
+    tablaProductos->setObjectName("tablaProductos");
+
+    // Configurar columnas
+    tablaProductos->setColumnCount(6);
+    QStringList encabezados;
+    encabezados << "Código" << "Nombre" << "Categoría" << "Precio" << "Stock" << "Caducidad";
+    tablaProductos->setHorizontalHeaderLabels(encabezados);
+
+    // Configurar comportamiento de la tabla
+    tablaProductos->setEditTriggers(QAbstractItemView::NoEditTriggers);  // Solo lectura
+    tablaProductos->setSelectionBehavior(QAbstractItemView::SelectRows);
+    tablaProductos->setSelectionMode(QAbstractItemView::SingleSelection);
+    tablaProductos->setAlternatingRowColors(true);
+    tablaProductos->setSortingEnabled(true);
+
+    // Configurar headers
+    tablaProductos->horizontalHeader()->setStretchLastSection(true);
+    tablaProductos->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    tablaProductos->verticalHeader()->setVisible(false);
+
+    // Establecer anchos iniciales de columnas
+    tablaProductos->setColumnWidth(0, 120);  // Código
+    tablaProductos->setColumnWidth(1, 250);  // Nombre
+    tablaProductos->setColumnWidth(2, 120);  // Categoría
+    tablaProductos->setColumnWidth(3, 100);  // Precio
+    tablaProductos->setColumnWidth(4, 80);   // Stock
+    tablaProductos->setColumnWidth(5, 120);  // Caducidad
+}
+
+// =============================================================================
+// Aplicar estilos QSS (Tema FC Barcelona: Blaugrana)
+// =============================================================================
+void VentanaPrincipal::aplicarEstilos() {
+    QString estilos = R"(
+        /* ===== VENTANA PRINCIPAL ===== */
+        QMainWindow {
+            background-color: #f5f5f5;
+        }
+
+        /* ===== SIDEBAR (Panel Izquierdo) ===== */
+        #panelSidebar {
+            background-color: #004D98;
+            border: none;
+        }
+
+        /* ===== TÍTULO DEL SIDEBAR ===== */
+        #lblTitulo {
+            color: #EDBB00;
+            font-size: 22px;
+            font-weight: bold;
+            padding: 10px;
+            border-bottom: 2px solid #EDBB00;
+            margin-bottom: 10px;
+        }
+
+        /* ===== BOTONES DEL SIDEBAR ===== */
+        #btnSidebar {
+            background-color: #A50044;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 6px;
+            text-align: left;
+        }
+
+        #btnSidebar:hover {
+            background-color: #EDBB00;
+            color: #004D98;
+        }
+
+        #btnSidebar:pressed {
+            background-color: #d4a800;
+            color: #003366;
+        }
+
+        /* ===== ETIQUETA DE VERSIÓN ===== */
+        #lblVersion {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 11px;
+            padding: 5px;
+        }
+
+        /* ===== TABLA DE PRODUCTOS ===== */
+        #tablaProductos {
+            background-color: white;
+            alternate-background-color: #f0f4f8;
+            gridline-color: #ddd;
+            border: none;
+            font-size: 13px;
+        }
+
+        #tablaProductos::item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        #tablaProductos::item:selected {
+            background-color: #004D98;
+            color: white;
+        }
+
+        #tablaProductos::item:hover {
+            background-color: #e8f0fe;
+        }
+
+        /* ===== ENCABEZADOS DE LA TABLA ===== */
+        QHeaderView::section {
+            background-color: #004D98;
+            color: white;
+            font-weight: bold;
+            font-size: 13px;
+            padding: 10px 8px;
+            border: none;
+            border-right: 1px solid #003366;
+        }
+
+        QHeaderView::section:hover {
+            background-color: #0066cc;
+        }
+
+        /* ===== SCROLLBARS ===== */
+        QScrollBar:vertical {
+            background-color: #f0f0f0;
+            width: 12px;
+            border-radius: 6px;
+        }
+
+        QScrollBar::handle:vertical {
+            background-color: #004D98;
+            border-radius: 6px;
+            min-height: 30px;
+        }
+
+        QScrollBar::handle:vertical:hover {
+            background-color: #A50044;
+        }
+
+        QScrollBar:horizontal {
+            background-color: #f0f0f0;
+            height: 12px;
+            border-radius: 6px;
+        }
+
+        QScrollBar::handle:horizontal {
+            background-color: #004D98;
+            border-radius: 6px;
+            min-width: 30px;
+        }
+
+        QScrollBar::handle:horizontal:hover {
+            background-color: #A50044;
+        }
+
+        QScrollBar::add-line, QScrollBar::sub-line {
+            border: none;
+            background: none;
+        }
+
+        /* ===== TOOLTIPS ===== */
+        QToolTip {
+            background-color: #004D98;
+            color: white;
+            border: 1px solid #EDBB00;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* ===== DIÁLOGOS DE ENTRADA ===== */
+        QInputDialog, QMessageBox {
+            background-color: white;
+        }
+
+        QInputDialog QLineEdit {
+            padding: 8px;
+            border: 2px solid #004D98;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        QInputDialog QPushButton, QMessageBox QPushButton {
+            background-color: #004D98;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        QInputDialog QPushButton:hover, QMessageBox QPushButton:hover {
+            background-color: #A50044;
+        }
+
+        /* ===== BARRA DE BÚSQUEDA AVANZADA ===== */
+        #barraBusqueda {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+        }
+
+        #lblBuscarPor {
+            color: #004D98;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        #comboFiltroBusqueda {
+            padding: 6px 10px;
+            border: 2px solid #004D98;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 13px;
+        }
+
+        #comboFiltroBusqueda:hover {
+            border-color: #A50044;
+        }
+
+        #comboFiltroBusqueda::drop-down {
+            border: none;
+            width: 25px;
+        }
+
+        #inputBusqueda, #inputBusquedaFin {
+            padding: 8px 12px;
+            border: 2px solid #004D98;
+            border-radius: 4px;
+            font-size: 13px;
+            background-color: white;
+        }
+
+        #inputBusqueda:focus, #inputBusquedaFin:focus {
+            border-color: #EDBB00;
+        }
+
+        #btnBusqueda {
+            background-color: #004D98;
+            color: white;
+            font-weight: bold;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        #btnBusqueda:hover {
+            background-color: #A50044;
+        }
+
+        #btnMostrarTodos {
+            background-color: #6c757d;
+            color: white;
+            font-weight: bold;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        #btnMostrarTodos:hover {
+            background-color: #5a6268;
+        }
+
+        /* ===== FORMULARIO INSERCIÓN (QDialog) ===== */
+        QDialog {
+            background-color: #f5f5f5;
+        }
+
+        QDialog QLabel {
+            font-size: 13px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        QDialog QLineEdit {
+            padding: 8px;
+            border: 2px solid #004D98;
+            border-radius: 4px;
+            font-size: 13px;
+            background-color: white;
+        }
+
+        QDialog QLineEdit:focus {
+            border-color: #EDBB00;
+        }
+
+        QDialog QPushButton {
+            background-color: #004D98;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        QDialog QPushButton:hover {
+            background-color: #A50044;
+        }
+    )";
+
+    setStyleSheet(estilos);
+}
+
+// =============================================================================
+// Conectar señales y slots
+// =============================================================================
+void VentanaPrincipal::conectarSenales() {
+    // Botones del sidebar
+    connect(btnCargarCSV, &QPushButton::clicked, this, &VentanaPrincipal::onCargarCSV);
+    connect(btnInsertar, &QPushButton::clicked, this, &VentanaPrincipal::onInsertarProducto);
+    connect(btnEliminar, &QPushButton::clicked, this, &VentanaPrincipal::onEliminarProducto);
+    connect(btnBuscar, &QPushButton::clicked, this, &VentanaPrincipal::onBuscarProducto);
+    connect(btnReportes, &QPushButton::clicked, this, &VentanaPrincipal::onGenerarReportes);
+    connect(btnBenchmarking, &QPushButton::clicked, this, &VentanaPrincipal::onBenchmarking);
+    
+    // Barra de búsqueda avanzada
+    connect(btnEjecutarBusqueda, &QPushButton::clicked, this, &VentanaPrincipal::ejecutarBusquedaAvanzada);
+    connect(btnMostrarTodos, &QPushButton::clicked, this, &VentanaPrincipal::actualizarTabla);
+    connect(comboFiltroBusqueda, QOverload<int>::of(&QComboBox::currentIndexChanged), 
+            this, &VentanaPrincipal::onCambioFiltroBusqueda);
+    
+    // Enter en input ejecuta búsqueda
+    connect(inputBusqueda, &QLineEdit::returnPressed, this, &VentanaPrincipal::ejecutarBusquedaAvanzada);
+    connect(inputBusquedaFin, &QLineEdit::returnPressed, this, &VentanaPrincipal::ejecutarBusquedaAvanzada);
+}
+
+// =============================================================================
+// SLOT: Cargar archivo CSV
+// Usa QFileDialog para seleccionar archivo y carga los datos en las estructuras
+// =============================================================================
+void VentanaPrincipal::onCargarCSV() {
+    QString archivo = QFileDialog::getOpenFileName(
+        this,
+        "Seleccionar archivo CSV",
+        "data/",
+        "Archivos CSV (*.csv);;Todos los archivos (*.*)"
+    );
+
+    if (archivo.isEmpty()) {
+        return;  // Usuario canceló
+    }
+
+    // Convertir QString a std::string y cargar
+    std::string rutaArchivo = archivo.toStdString();
+    
+    cargadorCSV.cargar(
+        rutaArchivo,
+        refListaNormal,
+        refListaOrdenada,
+        refTablaHash,
+        refArbolAVL,
+        refArbolB,
+        refArbolBPlus
+    );
+
+    // Actualizar la tabla con los nuevos datos
+    actualizarTabla();
+
+    // Mostrar mensaje de éxito
+    int cantidadProductos = static_cast<int>(refListaNormal.obtenerTodos().size());
+    QMessageBox::information(
+        this,
+        "Carga Exitosa",
+        QString("Se cargaron %1 productos correctamente.\n\nArchivo: %2")
+            .arg(cantidadProductos)
+            .arg(archivo)
+    );
+}
+
+// =============================================================================
+// SLOT: Actualizar tabla de productos
+// Obtiene todos los productos de la lista y los muestra en el QTableWidget
+// =============================================================================
+void VentanaPrincipal::actualizarTabla() {
+    // Deshabilitar ordenamiento temporalmente para evitar problemas
+    tablaProductos->setSortingEnabled(false);
+    
+    // Limpiar tabla
+    tablaProductos->setRowCount(0);
+
+    // Obtener todos los productos como vector (buffer temporal)
+    std::vector<Producto*> productos = refListaNormal.obtenerTodos();
+
+    // Llenar la tabla
+    for (size_t i = 0; i < productos.size(); ++i) {
+        Producto* prod = productos[i];
+        if (prod == nullptr) continue;
+
+        int fila = tablaProductos->rowCount();
+        tablaProductos->insertRow(fila);
+
+        // Columna 0: Código de barras
+        tablaProductos->setItem(fila, 0, 
+            new QTableWidgetItem(QString::fromStdString(prod->codigoBarras)));
+
+        // Columna 1: Nombre
+        tablaProductos->setItem(fila, 1, 
+            new QTableWidgetItem(QString::fromStdString(prod->nombre)));
+
+        // Columna 2: Categoría
+        tablaProductos->setItem(fila, 2, 
+            new QTableWidgetItem(QString::fromStdString(prod->categoria)));
+
+        // Columna 3: Precio (formateado con 2 decimales)
+        QTableWidgetItem* itemPrecio = new QTableWidgetItem(
+            QString("Q %1").arg(prod->precio, 0, 'f', 2));
+        itemPrecio->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        tablaProductos->setItem(fila, 3, itemPrecio);
+
+        // Columna 4: Stock
+        QTableWidgetItem* itemStock = new QTableWidgetItem(
+            QString::number(prod->stock));
+        itemStock->setTextAlignment(Qt::AlignCenter);
+        tablaProductos->setItem(fila, 4, itemStock);
+
+        // Columna 5: Fecha de caducidad
+        tablaProductos->setItem(fila, 5, 
+            new QTableWidgetItem(QString::fromStdString(prod->fechaCaducidad)));
+    }
+
+    // Reactivar ordenamiento
+    tablaProductos->setSortingEnabled(true);
+}
+
+// =============================================================================
+// SLOT: Insertar nuevo producto
+// Usa un QDialog con QFormLayout para mejor experiencia de usuario
+// =============================================================================
+void VentanaPrincipal::onInsertarProducto() {
+    // Crear diálogo de inserción
+    QDialog dialogo(this);
+    dialogo.setWindowTitle("➕ Insertar Nuevo Producto");
+    dialogo.setMinimumWidth(400);
+    
+    // Layout principal del diálogo
+    QVBoxLayout* layoutDialogo = new QVBoxLayout(&dialogo);
+    layoutDialogo->setSpacing(15);
+    layoutDialogo->setContentsMargins(20, 20, 20, 20);
+    
+    // Título del formulario
+    QLabel* lblTituloForm = new QLabel("Ingrese los datos del producto:");
+    lblTituloForm->setStyleSheet("font-size: 15px; font-weight: bold; color: #004D98; margin-bottom: 10px;");
+    layoutDialogo->addWidget(lblTituloForm);
+    
+    // Formulario con campos
+    QFormLayout* formLayout = new QFormLayout();
+    formLayout->setSpacing(12);
+    formLayout->setLabelAlignment(Qt::AlignRight);
+    
+    QLineEdit* inputNombre = new QLineEdit();
+    inputNombre->setPlaceholderText("Ej: Leche Entera 1L");
+    
+    QLineEdit* inputCodigo = new QLineEdit();
+    inputCodigo->setPlaceholderText("Ej: 1001");
+    
+    QLineEdit* inputCategoria = new QLineEdit();
+    inputCategoria->setPlaceholderText("Ej: Lacteos");
+    
+    QLineEdit* inputFecha = new QLineEdit();
+    inputFecha->setPlaceholderText("YYYY-MM-DD");
+    inputFecha->setText("2026-12-31");
+    
+    QLineEdit* inputMarca = new QLineEdit();
+    inputMarca->setPlaceholderText("Ej: Lala");
+    
+    QLineEdit* inputPrecio = new QLineEdit();
+    inputPrecio->setPlaceholderText("0.00");
+    inputPrecio->setValidator(new QDoubleValidator(0, 100000, 2, &dialogo));
+    
+    QLineEdit* inputStock = new QLineEdit();
+    inputStock->setPlaceholderText("0");
+    inputStock->setValidator(new QIntValidator(0, 1000000, &dialogo));
+    
+    formLayout->addRow("📦 Nombre:", inputNombre);
+    formLayout->addRow("🏷️ Código de Barras:", inputCodigo);
+    formLayout->addRow("📁 Categoría:", inputCategoria);
+    formLayout->addRow("📅 Fecha Caducidad:", inputFecha);
+    formLayout->addRow("🏢 Marca:", inputMarca);
+    formLayout->addRow("💰 Precio (Q):", inputPrecio);
+    formLayout->addRow("📊 Stock:", inputStock);
+    
+    layoutDialogo->addLayout(formLayout);
+    
+    // Separador
+    QFrame* linea = new QFrame();
+    linea->setFrameShape(QFrame::HLine);
+    linea->setStyleSheet("background-color: #ddd;");
+    layoutDialogo->addWidget(linea);
+    
+    // Botones de acción
+    QHBoxLayout* layoutBotones = new QHBoxLayout();
+    layoutBotones->setSpacing(10);
+    
+    QPushButton* btnCancelar = new QPushButton("Cancelar");
+    btnCancelar->setStyleSheet("background-color: #6c757d;");
+    btnCancelar->setFixedWidth(100);
+    
+    QPushButton* btnAceptar = new QPushButton("✓ Insertar");
+    btnAceptar->setDefault(true);
+    btnAceptar->setFixedWidth(100);
+    
+    layoutBotones->addStretch();
+    layoutBotones->addWidget(btnCancelar);
+    layoutBotones->addWidget(btnAceptar);
+    
+    layoutDialogo->addLayout(layoutBotones);
+    
+    // Conexiones
+    connect(btnCancelar, &QPushButton::clicked, &dialogo, &QDialog::reject);
+    connect(btnAceptar, &QPushButton::clicked, &dialogo, &QDialog::accept);
+    
+    // Ejecutar diálogo
+    if (dialogo.exec() != QDialog::Accepted) {
+        return;
+    }
+    
+    // Validar campos
+    QString nombre = inputNombre->text().trimmed();
+    QString codigo = inputCodigo->text().trimmed();
+    QString categoria = inputCategoria->text().trimmed();
+    QString fecha = inputFecha->text().trimmed();
+    QString marca = inputMarca->text().trimmed();
+    QString precioStr = inputPrecio->text().trimmed();
+    QString stockStr = inputStock->text().trimmed();
+    
+    if (nombre.isEmpty() || codigo.isEmpty() || categoria.isEmpty() || 
+        fecha.isEmpty() || marca.isEmpty() || precioStr.isEmpty() || stockStr.isEmpty()) {
+        QMessageBox::warning(this, "Campos Incompletos",
+            "Por favor, complete todos los campos del formulario.");
+        return;
+    }
+    
+    double precio = precioStr.toDouble();
+    int stock = stockStr.toInt();
+    
+    // Crear nuevo producto
+    Producto* nuevoProducto = new Producto(
+        nombre.toStdString(),
+        codigo.toStdString(),
+        categoria.toStdString(),
+        fecha.toStdString(),
+        marca.toStdString(),
+        precio,
+        stock
+    );
+
+    // Intentar insertar en tabla hash (verifica duplicados)
+    if (!refTablaHash.insertar(nuevoProducto)) {
+        delete nuevoProducto;
+        QMessageBox::warning(this, "Error",
+            "No se pudo insertar: el código de barras ya existe.");
+        return;
+    }
+
+    // Insertar en todas las demás estructuras
+    refListaNormal.insertar(nuevoProducto);
+    refListaOrdenada.insertarOrdenado(nuevoProducto);
+    refArbolAVL.insertar(nuevoProducto);
+    refArbolB.insertar(nuevoProducto);
+    refArbolBPlus.insertar(nuevoProducto);
+
+    // Actualizar tabla
+    actualizarTabla();
+
+    QMessageBox::information(this, "Éxito",
+        QString("Producto '%1' insertado correctamente.").arg(nombre));
+}
+
+// =============================================================================
+// SLOT: Eliminar producto
+// Solicita código de barras y elimina el producto de todas las estructuras
+// =============================================================================
+void VentanaPrincipal::onEliminarProducto() {
+    bool ok;
+    QString codigo = QInputDialog::getText(this, "Eliminar Producto",
+        "Ingrese el código de barras del producto a eliminar:",
+        QLineEdit::Normal, "", &ok);
+
+    if (!ok || codigo.isEmpty()) {
+        return;
+    }
+
+    // Buscar el producto primero
+    Producto* producto = refTablaHash.buscarPorCodigoBarras(codigo.toStdString());
+    
+    if (producto == nullptr) {
+        QMessageBox::warning(this, "No encontrado",
+            QString("No se encontró ningún producto con el código '%1'.").arg(codigo));
+        return;
+    }
+
+    // Confirmar eliminación
+    QMessageBox::StandardButton respuesta = QMessageBox::question(
+        this, "Confirmar Eliminación",
+        QString("¿Está seguro de eliminar el producto?\n\n"
+                "Nombre: %1\n"
+                "Código: %2\n"
+                "Categoría: %3")
+            .arg(QString::fromStdString(producto->nombre))
+            .arg(QString::fromStdString(producto->codigoBarras))
+            .arg(QString::fromStdString(producto->categoria)),
+        QMessageBox::Yes | QMessageBox::No
+    );
+
+    if (respuesta != QMessageBox::Yes) {
+        return;
+    }
+
+    // Eliminar de todas las estructuras
+    std::string codigoStr = codigo.toStdString();
+    refListaNormal.eliminarPorCodigoBarras(codigoStr);
+    refListaOrdenada.eliminarPorCodigoBarras(codigoStr);
+    refTablaHash.eliminarPorCodigoBarras(codigoStr);
+    // Nota: AVL, B y B+ requerirían métodos de eliminación adicionales
+
+    // Actualizar tabla
+    actualizarTabla();
+
+    QMessageBox::information(this, "Éxito",
+        "Producto eliminado correctamente.");
+}
+
+// =============================================================================
+// SLOT: Buscar producto por código de barras
+// Usa QInputDialog para pedir el código y busca en la TablaHash
+// =============================================================================
+void VentanaPrincipal::onBuscarProducto() {
+    bool ok;
+    QString codigo = QInputDialog::getText(
+        this,
+        "Buscar Producto",
+        "Ingrese el código de barras:",
+        QLineEdit::Normal,
+        "",
+        &ok
+    );
+
+    if (!ok || codigo.isEmpty()) {
+        return;  // Usuario canceló
+    }
+
+    // Buscar en la tabla hash
+    std::string codigoStr = codigo.toStdString();
+    Producto* producto = refTablaHash.buscarPorCodigoBarras(codigoStr);
+
+    if (producto == nullptr) {
+        QMessageBox::warning(
+            this,
+            "No Encontrado",
+            QString("No se encontró ningún producto con el código:\n%1").arg(codigo)
+        );
+        return;
+    }
+
+    // Mostrar información del producto
+    QString info = QString(
+        "═══════════════════════════════════\n"
+        "      PRODUCTO ENCONTRADO\n"
+        "═══════════════════════════════════\n\n"
+        "📦 Nombre: %1\n"
+        "🏷️ Código: %2\n"
+        "📁 Categoría: %3\n"
+        "🏢 Marca: %4\n"
+        "💰 Precio: Q %5\n"
+        "📊 Stock: %6 unidades\n"
+        "📅 Caducidad: %7\n"
+    )
+    .arg(QString::fromStdString(producto->nombre))
+    .arg(QString::fromStdString(producto->codigoBarras))
+    .arg(QString::fromStdString(producto->categoria))
+    .arg(QString::fromStdString(producto->marca))
+    .arg(producto->precio, 0, 'f', 2)
+    .arg(producto->stock)
+    .arg(QString::fromStdString(producto->fechaCaducidad));
+
+    QMessageBox::information(this, "Producto Encontrado", info);
+}
+
+// =============================================================================
+// SLOT: Generar reportes Graphviz
+// Llama a generarImagen() de AVL, B y B+
+// =============================================================================
+void VentanaPrincipal::onGenerarReportes() {
+    if (refListaNormal.estaVacia()) {
+        QMessageBox::warning(this, "Sin Datos",
+            "No hay productos cargados para generar reportes.\n"
+            "Por favor, cargue un archivo CSV primero.");
+        return;
+    }
+
+    // Asegurar que el directorio 'data' existe
+    QDir dir;
+    if (!dir.exists("data")) {
+        dir.mkpath("data");
+    }
+
+    // Generar imágenes de los tres árboles
+    refArbolAVL.generarImagen();
+    refArbolB.generarImagen();
+    refArbolBPlus.generarImagen();
+
+    QMessageBox::information(
+        this,
+        "Reportes Generados",
+        "Se han generado los siguientes archivos en la carpeta 'data/':\n\n"
+        "📊 avl.png - Árbol AVL (ordenado por nombre)\n"
+        "📊 arbol_b.png - Árbol B (por fecha de caducidad)\n"
+        "📊 arbol_bplus.png - Árbol B+ (por categoría)\n\n"
+        "También se generaron los archivos .dot correspondientes."
+    );
+}
+
+// =============================================================================
+// SLOT: Ejecutar pruebas de rendimiento (Benchmarking)
+// Ejecuta el MedidorRendimiento (salida en consola)
+// =============================================================================
+void VentanaPrincipal::onBenchmarking() {
+    if (refListaNormal.estaVacia()) {
+        QMessageBox::warning(this, "Sin Datos",
+            "No hay productos cargados para ejecutar benchmarking.\n"
+            "Por favor, cargue un archivo CSV primero.");
+        return;
+    }
+
+    // Ejecutar benchmarking (imprime en consola)
+    MedidorRendimiento medidor;
+    medidor.ejecutarPruebasBusqueda(
+        refListaNormal,
+        refListaOrdenada,
+        refArbolAVL,
+        refTablaHash
+    );
+
+    QMessageBox::information(
+        this,
+        "Benchmarking Completado",
+        "Las pruebas de rendimiento se han ejecutado.\n\n"
+        "📋 Por favor, revise la salida en la terminal/consola\n"
+        "para ver la tabla comparativa de tiempos.\n\n"
+        "Estructuras probadas:\n"
+        "• Lista Normal (O(n))\n"
+        "• Lista Ordenada (O(n))\n"
+        "• Árbol AVL (O(log n))\n"
+        "• Tabla Hash (O(1))"
+    );
+}
+
+// =============================================================================
+// SLOT: Cambio de filtro de búsqueda
+// Muestra/oculta el input de fecha fin según selección
+// =============================================================================
+void VentanaPrincipal::onCambioFiltroBusqueda(int indice) {
+    // Índice 3 = "Rango de Fecha (B)"
+    bool esRango = (indice == 3);
+    inputBusquedaFin->setVisible(esRango);
+    
+    // Actualizar placeholder según tipo de búsqueda
+    switch (indice) {
+        case 0:  // Código (Hash)
+            inputBusqueda->setPlaceholderText("Código de barras...");
+            break;
+        case 1:  // Nombre (AVL)
+            inputBusqueda->setPlaceholderText("Nombre del producto...");
+            break;
+        case 2:  // Categoría (B+)
+            inputBusqueda->setPlaceholderText("Categoría (ej: Lacteos)...");
+            break;
+        case 3:  // Rango de Fecha (B)
+            inputBusqueda->setPlaceholderText("Fecha inicio (YYYY-MM-DD)");
+            break;
+    }
+    inputBusqueda->clear();
+    inputBusquedaFin->clear();
+}
+
+// =============================================================================
+// SLOT: Ejecutar búsqueda avanzada según filtro seleccionado
+// =============================================================================
+void VentanaPrincipal::ejecutarBusquedaAvanzada() {
+    QString termino = inputBusqueda->text().trimmed();
+    
+    if (termino.isEmpty()) {
+        QMessageBox::warning(this, "Campo Vacío", 
+            "Por favor, ingrese un término de búsqueda.");
+        return;
+    }
+    
+    int filtro = comboFiltroBusqueda->currentIndex();
+    std::vector<Producto*> resultados;
+    
+    switch (filtro) {
+        case 0: {  // Código (Hash)
+            Producto* p = refTablaHash.buscarPorCodigoBarras(termino.toStdString());
+            if (p != nullptr) {
+                resultados.push_back(p);
+            }
+            break;
+        }
+        case 1: {  // Nombre (AVL)
+            Producto* p = refArbolAVL.buscarPorNombre(termino.toStdString());
+            if (p != nullptr) {
+                resultados.push_back(p);
+            }
+            break;
+        }
+        case 2: {  // Categoría (B+)
+            resultados = refArbolBPlus.obtenerPorCategoria(termino.toStdString());
+            break;
+        }
+        case 3: {  // Rango de Fecha (B)
+            QString fechaFin = inputBusquedaFin->text().trimmed();
+            if (fechaFin.isEmpty()) {
+                QMessageBox::warning(this, "Fecha Fin Requerida",
+                    "Para búsqueda por rango, ingrese también la fecha de fin.");
+                return;
+            }
+            resultados = refArbolB.obtenerPorRango(termino.toStdString(), fechaFin.toStdString());
+            break;
+        }
+    }
+    
+    // Mostrar resultados en la tabla
+    mostrarProductosEnTabla(resultados);
+    
+    // Mensaje informativo
+    if (resultados.empty()) {
+        QMessageBox::information(this, "Sin Resultados",
+            "No se encontraron productos con el criterio especificado.");
+    } else {
+        QString msg = QString("Se encontraron %1 producto(s).").arg(resultados.size());
+        // Status bar o breve indicación (no intrusivo)
+        statusBar()->showMessage(msg, 5000);  // 5 segundos
+    }
+}
+
+// =============================================================================
+// Mostrar un conjunto de productos en la tabla
+// =============================================================================
+void VentanaPrincipal::mostrarProductosEnTabla(const std::vector<Producto*>& productos) {
+    tablaProductos->setSortingEnabled(false);
+    tablaProductos->setRowCount(0);
+    
+    for (size_t i = 0; i < productos.size(); ++i) {
+        Producto* prod = productos[i];
+        if (prod == nullptr) continue;
+        
+        int fila = tablaProductos->rowCount();
+        tablaProductos->insertRow(fila);
+        
+        tablaProductos->setItem(fila, 0, 
+            new QTableWidgetItem(QString::fromStdString(prod->codigoBarras)));
+        tablaProductos->setItem(fila, 1, 
+            new QTableWidgetItem(QString::fromStdString(prod->nombre)));
+        tablaProductos->setItem(fila, 2, 
+            new QTableWidgetItem(QString::fromStdString(prod->categoria)));
+        
+        QTableWidgetItem* itemPrecio = new QTableWidgetItem(
+            QString("Q %1").arg(prod->precio, 0, 'f', 2));
+        itemPrecio->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        tablaProductos->setItem(fila, 3, itemPrecio);
+        
+        QTableWidgetItem* itemStock = new QTableWidgetItem(QString::number(prod->stock));
+        itemStock->setTextAlignment(Qt::AlignCenter);
+        tablaProductos->setItem(fila, 4, itemStock);
+        
+        tablaProductos->setItem(fila, 5, 
+            new QTableWidgetItem(QString::fromStdString(prod->fechaCaducidad)));
+    }
+    
+    tablaProductos->setSortingEnabled(true);
+}

@@ -291,6 +291,61 @@ void ArbolB::buscarRangoRecursivo(NodoB* nodo,
     }
 }
 
+// =============================================================================
+// Retorna productos en rango de fechas (para GUI) - versión recursiva auxiliar
+// =============================================================================
+void ArbolB::obtenerRangoRecursivo(NodoB* nodo,
+                                    const std::string& fechaInicio,
+                                    const std::string& fechaFin,
+                                    std::vector<Producto*>& resultado) const {
+    if (nodo == nullptr) {
+        return;
+    }
+
+    int i = 0;
+
+    for (i = 0; i < nodo->numClaves; ++i) {
+        // Visitar hijo izquierdo si la fecha puede estar ahí
+        if (!nodo->esHoja && nodo->claves[i].fecha >= fechaInicio) {
+            obtenerRangoRecursivo(nodo->hijos[i], fechaInicio, fechaFin, resultado);
+        }
+
+        // Si la clave está en el rango, agregar sus productos
+        if (nodo->claves[i].fecha >= fechaInicio && nodo->claves[i].fecha <= fechaFin) {
+            if (nodo->claves[i].productos != nullptr) {
+                std::vector<Producto*> productos = nodo->claves[i].productos->obtenerTodos();
+                for (Producto* p : productos) {
+                    resultado.push_back(p);
+                }
+            }
+        }
+
+        // Si ya pasamos el rango, parar
+        if (nodo->claves[i].fecha > fechaFin) {
+            return;
+        }
+    }
+
+    // Visitar último hijo
+    if (!nodo->esHoja) {
+        obtenerRangoRecursivo(nodo->hijos[i], fechaInicio, fechaFin, resultado);
+    }
+}
+
+// =============================================================================
+// Retorna productos en un rango de fechas en un vector (para GUI)
+// =============================================================================
+std::vector<Producto*> ArbolB::obtenerPorRango(const std::string& fechaInicio, 
+                                                const std::string& fechaFin) const {
+    std::vector<Producto*> resultado;
+    
+    if (raiz != nullptr) {
+        obtenerRangoRecursivo(raiz, fechaInicio, fechaFin, resultado);
+    }
+    
+    return resultado;
+}
+
 std::string ArbolB::escaparTexto(const std::string& texto) const {
     std::string resultado;
     for (char c : texto) {

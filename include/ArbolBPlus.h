@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include "ListaEnlazada.h"
 #include "Producto.h"
@@ -62,6 +63,9 @@ public:
 
     void insertar(Producto* producto);
     void buscarPorCategoria(const std::string& categoria) const;
+    
+    // Retorna productos de una categoría (para GUI)
+    std::vector<Producto*> obtenerPorCategoria(const std::string& categoria) const;
 
     void generarDot(const std::string& rutaArchivo) const;
     void generarImagen() const;

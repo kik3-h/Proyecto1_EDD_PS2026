@@ -2,6 +2,7 @@
 #define LISTA_ENLAZADA_H
 
 #include <string>
+#include <vector>
 
 #include "Producto.h"
 
@@ -28,6 +29,9 @@ public:
     int obtenerPrimerosProductos(Producto** productos, int cantidadMaxima) const;
     void mostrarTodos() const;
     bool estaVacia() const;
+    
+    // Método para obtener todos los productos como vector (buffer temporal para UI)
+    std::vector<Producto*> obtenerTodos() const;
 };
 
 #endif

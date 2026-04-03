@@ -324,6 +324,29 @@ void ArbolBPlus::buscarPorCategoria(const std::string& categoria) const {
     }
 }
 
+// =============================================================================
+// Retorna productos de una categoría en un vector (para uso en GUI)
+// =============================================================================
+std::vector<Producto*> ArbolBPlus::obtenerPorCategoria(const std::string& categoria) const {
+    std::vector<Producto*> resultado;
+    
+    if (raiz == nullptr) {
+        return resultado;
+    }
+    
+    ClaveCategoria* clave = buscarClaveGlobal(categoria);
+    
+    if (clave != nullptr && clave->productos != nullptr) {
+        // Obtener todos los productos de esa categoría
+        std::vector<Producto*> productos = clave->productos->obtenerTodos();
+        for (Producto* p : productos) {
+            resultado.push_back(p);
+        }
+    }
+    
+    return resultado;
+}
+
 std::string ArbolBPlus::escaparTexto(const std::string& texto) const {
     std::string resultado;
     for (char c : texto) {

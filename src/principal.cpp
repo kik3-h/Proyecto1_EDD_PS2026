@@ -1,7 +1,12 @@
-#include <iostream>
-#include <limits>
-#include <string>
+// =============================================================================
+// principal.cpp - Punto de entrada de la aplicación Qt
+// Catálogo de Productos - Proyecto EDD 2026
+// =============================================================================
 
+#include <QApplication>
+#include "VentanaPrincipal.h"
+
+// Includes del backend (estructuras de datos)
 #include "ArbolAVL.h"
 #include "ArbolB.h"
 #include "ArbolBPlus.h"
@@ -12,7 +17,52 @@
 #include "Producto.h"
 #include "TablaHash.h"
 
-int main() {
+int main(int argc, char* argv[]) {
+    // Crear aplicación Qt
+    QApplication app(argc, argv);
+    
+    // Configurar información de la aplicación
+    QApplication::setApplicationName("Catálogo de Productos EDD");
+    QApplication::setApplicationVersion("1.0.0");
+    QApplication::setOrganizationName("USAC - EDD 2026");
+
+    // =========================================================================
+    // Instanciar estructuras de datos del backend
+    // =========================================================================
+    ListaEnlazada listaProductosNormal;
+    ListaEnlazadaOrdenada listaProductosOrdenada;
+    TablaHash tablaProductos;
+    ArbolAVL arbolProductos;
+    ArbolB arbolProductosFecha;
+    ArbolBPlus arbolProductosCategoria;
+
+    // =========================================================================
+    // Crear ventana principal pasando referencias a las estructuras
+    // =========================================================================
+    VentanaPrincipal ventana(
+        listaProductosNormal,
+        listaProductosOrdenada,
+        tablaProductos,
+        arbolProductos,
+        arbolProductosFecha,
+        arbolProductosCategoria
+    );
+    ventana.show();
+
+    // Ejecutar loop de eventos de Qt
+    return app.exec();
+}
+
+// =============================================================================
+// CÓDIGO DEL MENÚ DE CONSOLA (COMENTADO PARA REFERENCIA)
+// Las estructuras de datos se instancian ahora dentro de VentanaPrincipal
+// =============================================================================
+/*
+#include <iostream>
+#include <limits>
+#include <string>
+
+int mainConsola() {
     ListaEnlazada listaProductosNormal;
     ListaEnlazadaOrdenada listaProductosOrdenada;
     TablaHash tablaProductos;
@@ -190,3 +240,4 @@ int main() {
     std::cout << "Saliendo del sistema...\n";
     return 0;
 }
+*/
