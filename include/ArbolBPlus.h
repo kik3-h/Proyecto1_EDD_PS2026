@@ -8,9 +8,10 @@
 #include "Producto.h"
 
 // Estructura para manejar claves con productos de la misma categoría
+// Diseño: Una única clave por categoría, con ListaEnlazada* para agrupar duplicados
 struct ClaveCategoria {
     std::string categoria;
-    ListaEnlazada* productos;  // Solo se usa en hojas
+    ListaEnlazada* productos;  // Solo se usa en hojas (agrupa productos de misma categoría)
 
     ClaveCategoria();
     ~ClaveCategoria();
@@ -24,7 +25,7 @@ public:
     int numClaves;
     bool esHoja;
     int gradoMinimo;
-    NodoBPlus* siguiente;  // Enlace entre hojas (solo para nodos hoja)
+    NodoBPlus* siguiente;  // Enlace secuencial entre hojas (para recorrido O(log N + K))
 
     explicit NodoBPlus(int t, bool hoja);
     ~NodoBPlus();
@@ -41,12 +42,19 @@ private:
 
     NodoBPlus* buscarHoja(NodoBPlus* nodo, const std::string& categoria) const;
     ClaveCategoria* buscarClaveEnHoja(NodoBPlus* hoja, const std::string& categoria) const;
+    
+    // Búsqueda global en todas las hojas para evitar duplicados
+    ClaveCategoria* buscarClaveGlobal(const std::string& categoria) const;
 
     void destruirRecursivo(NodoBPlus* nodo);
 
+    // Visualización con enlaces explícitos entre hojas
     void generarDotRecursivo(NodoBPlus* nodo, std::ofstream& archivo, int& contadorNodo) const;
     void generarEnlacesHojas(std::ofstream& archivo) const;
     std::string escaparTexto(const std::string& texto) const;
+    
+    // Obtener la primera hoja del árbol
+    NodoBPlus* obtenerPrimeraHoja() const;
 
 public:
     ArbolBPlus(int t = 3);

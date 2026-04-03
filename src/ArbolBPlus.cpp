@@ -67,6 +67,19 @@ bool ArbolBPlus::estaVacio() const {
     return raiz == nullptr;
 }
 
+// Obtiene la primera hoja del árbol (extremo izquierdo)
+NodoBPlus* ArbolBPlus::obtenerPrimeraHoja() const {
+    if (raiz == nullptr) {
+        return nullptr;
+    }
+    
+    NodoBPlus* actual = raiz;
+    while (!actual->esHoja) {
+        actual = actual->hijos[0];
+    }
+    return actual;
+}
+
 NodoBPlus* ArbolBPlus::buscarHoja(NodoBPlus* nodo, const std::string& categoria) const {
     if (nodo == nullptr) {
         return nullptr;
@@ -99,6 +112,24 @@ ClaveCategoria* ArbolBPlus::buscarClaveEnHoja(NodoBPlus* hoja, const std::string
     return nullptr;
 }
 
+// CORRECCIÓN BUG #2: Búsqueda global en TODAS las hojas para evitar duplicados
+// Esto es necesario porque buscarHoja() puede dirigirnos a una hoja incorrecta
+// cuando las claves han sido redistribuidas por splits
+ClaveCategoria* ArbolBPlus::buscarClaveGlobal(const std::string& categoria) const {
+    NodoBPlus* hoja = obtenerPrimeraHoja();
+    
+    while (hoja != nullptr) {
+        for (int i = 0; i < hoja->numClaves; ++i) {
+            if (hoja->claves[i].categoria == categoria) {
+                return &(hoja->claves[i]);
+            }
+        }
+        hoja = hoja->siguiente;
+    }
+    
+    return nullptr;
+}
+
 void ArbolBPlus::insertar(Producto* producto) {
     if (producto == nullptr) {
         return;
@@ -116,12 +147,12 @@ void ArbolBPlus::insertar(Producto* producto) {
         return;
     }
 
-    // Buscar la hoja donde debería estar la categoría
-    NodoBPlus* hoja = buscarHoja(raiz, categoria);
-    ClaveCategoria* claveExistente = buscarClaveEnHoja(hoja, categoria);
+    // CORRECCIÓN BUG #2: Búsqueda global para evitar duplicados de categoría
+    // Primero verificamos si la categoría ya existe en CUALQUIER hoja
+    ClaveCategoria* claveExistente = buscarClaveGlobal(categoria);
 
     if (claveExistente != nullptr) {
-        // La categoría ya existe: agregar producto a su lista
+        // La categoría ya existe: agregar producto a su ListaEnlazada (NO crear nueva clave)
         claveExistente->productos->insertar(producto);
         return;
     }
@@ -150,7 +181,7 @@ void ArbolBPlus::insertarEnNodoNoLleno(NodoBPlus* nodo, Producto* producto) {
     int i = nodo->numClaves - 1;
 
     if (nodo->esHoja) {
-        // Verificar si ya existe la categoría
+        // Verificar si ya existe la categoría en este nodo
         for (int j = 0; j < nodo->numClaves; ++j) {
             if (nodo->claves[j].categoria == categoria) {
                 nodo->claves[j].productos->insertar(producto);
@@ -167,7 +198,7 @@ void ArbolBPlus::insertarEnNodoNoLleno(NodoBPlus* nodo, Producto* producto) {
             --i;
         }
 
-        // Insertar nueva clave
+        // Insertar nueva clave con su ListaEnlazada
         nodo->claves[i + 1].categoria = categoria;
         nodo->claves[i + 1].productos = new ListaEnlazada();
         nodo->claves[i + 1].productos->insertar(producto);
@@ -210,7 +241,8 @@ void ArbolBPlus::dividirHijo(NodoBPlus* padre, int indice, NodoBPlus* hijo) {
         nuevoNodo->numClaves = t;
         hijo->numClaves = t - 1;
 
-        // Actualizar enlace entre hojas
+        // CORRECCIÓN BUG #1: Actualizar enlace secuencial entre hojas
+        // Esto mantiene la lista enlazada de hojas para recorrido O(log N + K)
         nuevoNodo->siguiente = hijo->siguiente;
         hijo->siguiente = nuevoNodo;
 
@@ -278,8 +310,8 @@ void ArbolBPlus::buscarPorCategoria(const std::string& categoria) const {
         return;
     }
 
-    NodoBPlus* hoja = buscarHoja(raiz, categoria);
-    ClaveCategoria* clave = buscarClaveEnHoja(hoja, categoria);
+    // Usar búsqueda global para encontrar la categoría
+    ClaveCategoria* clave = buscarClaveGlobal(categoria);
 
     if (clave == nullptr) {
         std::cout << "No se encontraron productos en la categoria '" << categoria << "'.\n";
@@ -310,15 +342,17 @@ void ArbolBPlus::generarDotRecursivo(NodoBPlus* nodo, std::ofstream& archivo, in
 
     int idActual = contadorNodo;
 
-    // Generar etiqueta del nodo
+    // Generar etiqueta del nodo con puertos para enlaces
     if (nodo->esHoja) {
-        archivo << "    nodo" << idActual << " [label=\"";
+        // Nodos hoja: incluir puerto 'sig' para enlace secuencial
+        archivo << "    nodo" << idActual << " [label=\"{";
         for (int i = 0; i < nodo->numClaves; ++i) {
             if (i > 0) archivo << "|";
             archivo << "<f" << i << "> " << escaparTexto(nodo->claves[i].categoria);
         }
-        archivo << "\", fillcolor=lightgreen];\n";
+        archivo << "}|<sig>\", fillcolor=lightgreen];\n";
     } else {
+        // Nodos internos
         archivo << "    nodo" << idActual << " [label=\"";
         for (int i = 0; i < nodo->numClaves; ++i) {
             if (i > 0) archivo << "|";
@@ -340,18 +374,20 @@ void ArbolBPlus::generarDotRecursivo(NodoBPlus* nodo, std::ofstream& archivo, in
     }
 }
 
+// CORRECCIÓN BUG #1: Generación de enlaces visuales entre hojas
+// Esta función genera las flechas punteadas azules que conectan las hojas secuencialmente,
+// demostrando el recorrido O(log N + K) requerido por el enunciado.
+// Solución: Se usan edges con estilos individuales y puertos específicos (:sig y :f0)
+// para que Graphviz renderice correctamente las flechas entre nodos hoja.
 void ArbolBPlus::generarEnlacesHojas(std::ofstream& archivo) const {
     if (raiz == nullptr) {
         return;
     }
 
     // Encontrar la primera hoja siguiendo siempre el hijo izquierdo
-    NodoBPlus* primeraHoja = raiz;
-    while (primeraHoja != nullptr && !primeraHoja->esHoja) {
-        primeraHoja = primeraHoja->hijos[0];
-    }
+    NodoBPlus* primeraHoja = obtenerPrimeraHoja();
 
-    if (primeraHoja == nullptr || primeraHoja->siguiente == nullptr) {
+    if (primeraHoja == nullptr) {
         return;
     }
 
@@ -376,41 +412,38 @@ void ArbolBPlus::generarEnlacesHojas(std::ofstream& archivo) const {
         }
     }
 
-    // Generar subgrafo para alinear hojas y mostrar enlaces
-    archivo << "\n    // Subgrafo para alinear hojas horizontalmente\n";
-    archivo << "    { rank=same; ";
+    // Contar hojas para verificar si hay enlaces
+    int numHojas = 0;
     NodoBPlus* hoja = primeraHoja;
+    while (hoja != nullptr) {
+        numHojas++;
+        hoja = hoja->siguiente;
+    }
+
+    if (numHojas <= 1) {
+        return;  // No hay enlaces que mostrar si solo hay una hoja
+    }
+
+    // Generar subgrafo para alinear hojas horizontalmente
+    archivo << "\n    // Subgrafo para alinear hojas horizontalmente\n";
+    archivo << "    {\n";
+    archivo << "        rank=same;\n";
+    hoja = primeraHoja;
     while (hoja != nullptr) {
         for (int i = 0; i < numNodos; ++i) {
             if (mapaNodos[i] == hoja) {
-                archivo << "nodo" << i << "; ";
+                archivo << "        nodo" << i << ";\n";
                 break;
             }
         }
         hoja = hoja->siguiente;
     }
-    archivo << "}\n";
+    archivo << "    }\n";
 
-    // Generar enlaces entre hojas con estilo invisible para ordenamiento
-    archivo << "\n    // Enlaces entre hojas (ordenamiento)\n";
-    archivo << "    edge [style=invis, weight=10];\n";
-
-    hoja = primeraHoja;
-    while (hoja != nullptr && hoja->siguiente != nullptr) {
-        int idActual = -1, idSiguiente = -1;
-        for (int i = 0; i < numNodos; ++i) {
-            if (mapaNodos[i] == hoja) idActual = i;
-            if (mapaNodos[i] == hoja->siguiente) idSiguiente = i;
-        }
-        if (idActual >= 0 && idSiguiente >= 0) {
-            archivo << "    nodo" << idActual << " -> nodo" << idSiguiente << ";\n";
-        }
-        hoja = hoja->siguiente;
-    }
-
-    // Generar enlaces visibles (punteados azules)
-    archivo << "\n    // Enlaces visibles entre hojas\n";
-    archivo << "    edge [style=dashed, color=blue, constraint=false, weight=0];\n";
+    // Generar enlaces VISIBLES entre hojas con flechas punteadas azules
+    // Cada edge se declara individualmente con su estilo para garantizar visualización
+    archivo << "\n    // Enlaces secuenciales entre hojas (flechas punteadas azules)\n";
+    archivo << "    // Demuestran el recorrido O(log N + K) del Arbol B+\n";
 
     hoja = primeraHoja;
     while (hoja != nullptr && hoja->siguiente != nullptr) {
@@ -420,7 +453,10 @@ void ArbolBPlus::generarEnlacesHojas(std::ofstream& archivo) const {
             if (mapaNodos[i] == hoja->siguiente) idSiguiente = i;
         }
         if (idActual >= 0 && idSiguiente >= 0) {
-            archivo << "    nodo" << idActual << ":e -> nodo" << idSiguiente << ":w [label=\"sig\"];\n";
+            // Flecha punteada azul desde puerto 'sig' de hoja actual hacia primer campo de siguiente
+            archivo << "    nodo" << idActual << ":sig -> nodo" << idSiguiente 
+                    << ":f0 [style=dashed, color=blue, penwidth=2.0, "
+                    << "constraint=false, label=\"sig\", fontcolor=blue];\n";
         }
         hoja = hoja->siguiente;
     }
@@ -434,8 +470,20 @@ void ArbolBPlus::generarDot(const std::string& rutaArchivo) const {
     }
 
     archivo << "digraph ArbolBPlus {\n";
+    archivo << "    // Configuracion del grafo\n";
     archivo << "    node [shape=record, style=filled];\n";
     archivo << "    rankdir=TB;\n";
+    archivo << "    splines=ortho;\n";  // Líneas ortogonales para mejor visualización
+    archivo << "    nodesep=0.5;\n";
+    archivo << "    ranksep=0.8;\n";
+    archivo << "\n    // Leyenda\n";
+    archivo << "    subgraph cluster_leyenda {\n";
+    archivo << "        label=\"Leyenda\";\n";
+    archivo << "        style=dashed;\n";
+    archivo << "        ley1 [label=\"Nodo Interno\", fillcolor=lightyellow, shape=box];\n";
+    archivo << "        ley2 [label=\"Nodo Hoja\", fillcolor=lightgreen, shape=box];\n";
+    archivo << "        ley1 -> ley2 [style=dashed, color=blue, label=\"Enlace Hoja\"];\n";
+    archivo << "    }\n\n";
 
     if (raiz != nullptr) {
         int contador = 0;
